@@ -25,7 +25,7 @@ def user_interaction(userinput: bool = True):
     # print_vacancies(top_vacancies)
     hh_api_hh = HhApi('https://api.hh.ru/')
 
-    res = hh_api_hh.get_request('vacancies', {'text': 'Python'})
+    res = hh_api_hh.get_request('vacancies', text='Python')
 
     # URL = 'https://api.hh.ru/vacancies'
 
