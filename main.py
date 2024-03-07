@@ -6,7 +6,8 @@ def user_interaction(userinput: bool = True):
     platforms = ["HeadHunter"]
     search_query = "Введите поисковый запрос: "
     top_n = 13
-    filter_words = "Python backend программист fullstack".split()
+    # filter_words = "Python backend программист fullstack".split()
+    filter_words = "Python"
     salary_range = '100000 - 150000'
 
     if userinput:
@@ -25,14 +26,39 @@ def user_interaction(userinput: bool = True):
     # print_vacancies(top_vacancies)
     hh_api_hh = HhApi('https://api.hh.ru/')
 
-    res = hh_api_hh.get_request('vacancies', text='Python')
+    # area_id = 113 - регион Россия
+    res = hh_api_hh.get_request('vacancies', text=filter_words, area_id=113, per_page=3)
 
     # URL = 'https://api.hh.ru/vacancies'
 
     # res = requests.get(URL, params={'text': 'Python'})
 
     print(res.status_code)
-    print(res.json())
+    # print(res.json())
+    print_dict_recursive(dict(res.json()), 0)
+
+    res = hh_api_hh.get_request('areas', area_id=1620)
+    areas = res.json()
+    for area in areas:
+        print(area)
+
+
+def print_dict_recursive(dictionary, i):
+    i += 1
+    for key, value in dictionary.items():
+        if isinstance(value, dict):
+            print(f"{' ' * (i-1)}{key} =")
+            print_dict_recursive(value, i)
+        elif isinstance(value, list):
+            print(f"{' ' * (i - 1)}{key} = \n[")
+            for l in value:
+                print_dict_recursive(l, i)
+                print(f"{' ' * (i - 1)}{l}")
+            print(f"]\n")
+        else:
+            print(f"{' ' * (i-1)}{key} = {value}")
+    # return questionlist
+    # resdict = dict(res.json())
 
 def get_my_urlls():
     mas_str = [
