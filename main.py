@@ -27,7 +27,9 @@ def user_interaction(userinput: bool = True):
     hh_api_hh = HhApi('https://api.hh.ru/')
 
     # area_id = 113 - регион Россия
-    res = hh_api_hh.get_request('vacancies', text=filter_words, area_id=113, per_page=3)
+    # Мурино: id= 5084
+    # Санкт-Петербург id = 2
+    res = hh_api_hh.get_request('vacancies', text=filter_words, area='2', per_page=50)
 
     # URL = 'https://api.hh.ru/vacancies'
 
@@ -37,11 +39,22 @@ def user_interaction(userinput: bool = True):
     # print(res.json())
     print_dict_recursive(dict(res.json()), 0)
 
-    res = hh_api_hh.get_request('areas', area_id=1620)
-    areas = res.json()
-    for area in areas:
-        print(area)
+    # res = hh_api_hh.get_request_area('areas/?area_id=Null')
+    # res = hh_api_hh.get_request_area('areas/?id=1530')
+    # # areas = res.json()
+    # print_areas(res.json())
 
+
+def print_areas(areas):
+    for area in areas:
+        if area['name'] == 'Россия':
+            for area_rf in area['areas']:
+                print(f"\t{area_rf['name']}: id= {area_rf['id']}")
+                if area_rf['name'] == 'Ленинградская область' or area_rf['name'] == 'Санкт-Петербург':
+                    for area_sp in area_rf['areas']:
+                        print(f"\t\t{area_sp['name']}: id= {area_sp['id']}")
+        else:
+            print(area['name'])
 
 def print_dict_recursive(dictionary, i):
     i += 1

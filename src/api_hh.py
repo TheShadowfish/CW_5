@@ -29,6 +29,20 @@ class HhApi(AbstractApiNoAuth):
         # URL = 'https://api.hh.ru/vacancies'
 
         res = requests.get(self.__url + sub_url, params=parameters)
+        return res
+
+    def get_request_area(self, sub_url: str, **parameters: dict[str: str]) -> requests:
+        """
+        Сделаем возврат ID по имени населенного пункта или области
+        Дополнительно вывод список областей возможно, но зачем?
+        :param sub_url:
+        :param parameters:
+        :return:
+        """
+        # URL = 'https://api.hh.ru/vacancies'
+
+        res = requests.get(self.__url + sub_url, params=parameters)
+        # res = hh_api_hh.get_request_area('areas', area_id=113)
 
         # print(res.status_code)
         #
