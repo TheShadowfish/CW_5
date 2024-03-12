@@ -75,7 +75,6 @@ class Vacancy:
         delimeter = f'\n\t'
         return f"Вакансия: {delimeter}{delimeter.join(repr_list)}"
 
-    @classmethod
     def is_duplicate(self, other) -> bool:
         """
         сравнить, совпадают ли вакансии полностью
@@ -85,22 +84,16 @@ class Vacancy:
             self.__region = other.__region
             self.__requirements = other.__requirements
         """
-        if isinstance(other, Vacancy):
-            # if self.__name == other.__name and self.__url == other.__url and self.__salary == other.__salary and self.__region == other.__region and self.__requirements == other.__requirements:
-            #     return True
-
-            for s, o in zip(other.__dict__.items(), self.__dict__.items()):
-                if isinstance(s, (int, str, tuple)) and isinstance(o, (int, str, tuple)):
-                    if s != o:
-                        print(f"s != o: {s} != {o}")
-                        return False
-                else:
-                    raise ValueError(f"{type(s)}, {type(o)} is not immutable, now we need to change 'is_duplicate' "
-                                     f"realisation in Vacancy!")
-            else:
-                return True
-        else:
+        if not isinstance(other, Vacancy):
             raise TypeError(f"{type(other)} is not a Vacancy exemplar!")
+
+        for s, o in zip(other.__dict__.items(), self.__dict__.items()):
+            if s != o:
+                return False
+        else:
+            return True
+
+
 
     """
     Методы для операций сравнения:
