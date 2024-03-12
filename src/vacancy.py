@@ -18,30 +18,52 @@ class Vacancy:
 
     def __init__(self, name: str, url: str, salary: str, region: str, requirements: str):
         valid_data = self.validation(name=name, url=url, salary=salary, region=region, requirements=requirements)
-        self.__name = name
-        self.__url = url
+        self.__name = valid_data['name']
+        self.__url = valid_data['url']
         self.__salary = valid_data['salary']
-        self.__region = region
-        self.__requirements = requirements
+        self.__region = valid_data['region']
+        self.__requirements = valid_data['requirements']
+
+    @property
+    def name(self):
+        return self.__name
+
+    @property
+    def url(self):
+        return self.__url
+
+    @property
+    def salary(self):
+        return self.__salary
+
+    @property
+    def region(self):
+        return self.__region
+
+    @property
+    def requirements(self):
+        return self.__requirements
 
     @staticmethod
     def validation(**kwargs: dict) -> dict:
         """
         Валидация данных при создании экземпляра класса
         """
+        None_text = 'Не указано'
         # 0 или Зарплата не указана
         if kwargs['salary'] is None:
             kwargs['salary'] = 0
-        for key, value in kwargs.items():
-            if key != 'salary':
-                if value is None:
-                    value = 'Не указано'
-            else:
-                if value is None:
-                    value = 0
-                else:
-                    value = int(value)
+        else:
+            kwargs['salary'] = int(kwargs['salary'])
 
+        if kwargs['name'] is None:
+            kwargs['name'] = None_text
+        if kwargs['url'] is None:
+            kwargs['url'] = None_text
+        if kwargs['region'] is None:
+            kwargs['region'] = None_text
+        if kwargs['requirements'] is None:
+            kwargs['requirements'] = None_text
         return kwargs
 
     def __repr__(self):
@@ -64,11 +86,13 @@ class Vacancy:
             self.__requirements = other.__requirements
         """
         if isinstance(other, Vacancy):
-            repr_list = [str(i[0]) + ': ' + str(i[1]) for i in self.__dict__.items()]
+            # if self.__name == other.__name and self.__url == other.__url and self.__salary == other.__salary and self.__region == other.__region and self.__requirements == other.__requirements:
+            #     return True
 
-            for s, o in zip(self.__dict__.items(), other.__dict__.items()):
-                if isinstance(s, (int, str, float, bool)) and isinstance(o, (int, str, float, bool)):
+            for s, o in zip(other.__dict__.items(), self.__dict__.items()):
+                if isinstance(s, (int, str, tuple)) and isinstance(o, (int, str, tuple)):
                     if s != o:
+                        print(f"s != o: {s} != {o}")
                         return False
                 else:
                     raise ValueError(f"{type(s)}, {type(o)} is not immutable, now we need to change 'is_duplicate' "
