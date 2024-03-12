@@ -5,6 +5,7 @@ class Vacancy:
     - название вакансии
     - ссылка на вакансию
     - зарплата
+    - регион/город
     - краткое описание или требования
      Класс поддерживает методы сравнения вакансий между собой по зарплате
     Класси валидирует данные, которыми инициализируются его атрибуты.
@@ -12,10 +13,11 @@ class Vacancy:
     В этом случае выставлять значение зарплаты 0 или «Зарплата не указана» в зависимости от структуры класса.
 
     """
+
     # __slots__ = ('__name', '__url', '__salary', '__region', '__requirements')
 
     def __init__(self, name: str, url: str, salary: str, region: str, requirements: str):
-        valid_data = self.validation(name = name, url=url, salary = salary)
+        valid_data = self.validation(name=name, url=url, salary=salary, region=region, requirements=requirements)
         self.__name = name
         self.__url = url
         self.__salary = valid_data['salary']
@@ -28,21 +30,28 @@ class Vacancy:
         Валидация данных при создании экземпляра класса
         """
         # 0 или Зарплата не указана
-        print (kwargs['salary'])
-        # if (kwargs['salary'])
+        if kwargs['salary'] is None:
+            kwargs['salary'] = 0
+        for key, value in kwargs.items():
+            if key != 'salary':
+                if value is None:
+                    value = 'Не указано'
+            else:
+                if value is None:
+                    value = 0
+                else:
+                    value = int(value)
 
-        # salary: 0 or from
-        #<highlighttext>Python</highlighttext> убрать
         return kwargs
 
     def __repr__(self):
         repr_list = [str(i[0]) + ': ' + str(i[1]) for i in self.__dict__.items()]
         return f"<{self.__class__.__name__}({', '.join(repr_list)})>"
+
     def __str__(self):
         repr_list = [str(i[0]) + ': ' + str(i[1]) for i in self.__dict__.items()]
         delimeter = f'\n\t'
-        return f"Вакансия: \n({delimeter.join(repr_list)})"
-
+        return f"Вакансия: {delimeter}{delimeter.join(repr_list)}"
 
     @classmethod
     def is_duplicate(self, other) -> bool:
@@ -59,8 +68,8 @@ class Vacancy:
 
             for s, o in zip(self.__dict__.items(), other.__dict__.items()):
                 if isinstance(s, (int, str, float, bool)) and isinstance(o, (int, str, float, bool)):
-                   if s != o:
-                       return False
+                    if s != o:
+                        return False
                 else:
                     raise ValueError(f"{type(s)}, {type(o)} is not immutable, now we need to change 'is_duplicate' "
                                      f"realisation in Vacancy!")

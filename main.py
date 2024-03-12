@@ -18,8 +18,7 @@ def user_interaction(userinput: bool = True):
         filter_words = input("Введите ключевые слова для фильтрации вакансий (через пробел): ").split()
         salary_range = input("Введите диапазон зарплат: ")  # Пример: 100000 - 150000
 
-
-    #найти идентификатор региона
+    # найти идентификатор региона
     region_id = HhApi.get_area_id(area_name=search_region)
 
     parameters = {'text': filter_words, 'per_page': 30}
@@ -43,23 +42,21 @@ def user_interaction(userinput: bool = True):
         res = hh_api_hh.get_vacancies()
     else:
         res = hh_api_hh.get_vacancies()
-        user_question = input(f"Все результаты поиска вывести? {hh_api_hh.found} - найдено, {hh_api_hh.pages} страниц? y/n")
+        user_question = input(
+            f"Все результаты поиска вывести? {hh_api_hh.found} - найдено, {hh_api_hh.pages} страниц? y/n")
 
-        if user_question in {'y','Y','Н','н',''}:
+        if user_question in {'y', 'Y', 'Н', 'н', ''}:
 
             for page_request in hh_api_hh:
                 print(f"\n PAGE {hh_api_hh.page} from {hh_api_hh.pages}: \n")
                 for item in page_request:
                     print(item)
 
-
     vacancy_constructor = HhVacancyConstructor()
     vacancy_list = vacancy_constructor.return_vacancy_list_from_json_list(res)
 
     for v in vacancy_list:
-        print(f"Vacancy: {v}")
-
-
+        print(f"{v}")
 
         # print(page_request)
 
@@ -68,7 +65,6 @@ def user_interaction(userinput: bool = True):
     # for item in res:
     #     print(item)
     #     # print_dict_recursive(item, 0)
-
 
     # area_id = 113 - регион Россия
     # Мурино: id= 5084
@@ -103,7 +99,7 @@ def print_dict_recursive(dictionary, i):
     i += 1
     for key, value in dictionary.items():
         if isinstance(value, dict):
-            print(f"{' ' * (i-1)}{key} =")
+            print(f"{' ' * (i - 1)}{key} =")
             print_dict_recursive(value, i)
         elif isinstance(value, list) and len(value) > 0:
             print(f"{' ' * (i - 1)}{key} = \n[")
@@ -112,9 +108,10 @@ def print_dict_recursive(dictionary, i):
                 print(f"{' ' * (i - 1)}{l}")
             print(f"]\n")
         else:
-            print(f"{' ' * (i-1)}{key} = {value}")
+            print(f"{' ' * (i - 1)}{key} = {value}")
     # return questionlist
     # resdict = dict(res.json())
+
 
 def get_my_urlls():
     mas_str = [
@@ -125,6 +122,7 @@ def get_my_urlls():
 
     ]
     print(mas_str)
+
 
 # начало программы
 if __name__ == '__main__':
