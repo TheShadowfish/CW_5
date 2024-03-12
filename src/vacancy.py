@@ -12,7 +12,7 @@ class Vacancy:
     В этом случае выставлять значение зарплаты 0 или «Зарплата не указана» в зависимости от структуры класса.
 
     """
-    __slots__ = ('__name', '__url', '__salary', '__region', '__requirements')
+    # __slots__ = ('__name', '__url', '__salary', '__region', '__requirements')
 
     def __init__(self, name: str, url: str, salary: str, region: str, requirements: str):
         valid_data = self.validation(name = name, url=url, salary = salary)
@@ -30,6 +30,9 @@ class Vacancy:
         # 0 или Зарплата не указана
         print (kwargs['salary'])
         # if (kwargs['salary'])
+
+        # salary: 0 or from
+        #<highlighttext>Python</highlighttext> убрать
         return kwargs
 
     def __repr__(self):

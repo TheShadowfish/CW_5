@@ -1,10 +1,11 @@
 import requests
-from src.api_hh import HhApi
+from src.api_interaction import HhApi
+from src.connectors import HhVacancyConstructor
 
 
 def user_interaction(userinput: bool = True):
     platforms = ["HeadHunter"]
-    search_region = 'Санкт-Петербург'
+    search_region = 'Московская область'
     top_n = 13
     # filter_words = "Python backend программист fullstack".split()
     filter_words = "Python"
@@ -18,56 +19,55 @@ def user_interaction(userinput: bool = True):
         salary_range = input("Введите диапазон зарплат: ")  # Пример: 100000 - 150000
 
 
-    # text = 'Мурино'
-    # # text = 'Мухосранск'
-    #
-    # id1 = hh_api_hh.get_request_area(area_name=text)
-    # print(f"{text}, id= {id1}")
+    #найти идентификатор региона
+    region_id = HhApi.get_area_id(area_name=search_region)
 
+    parameters = {'text': filter_words, 'per_page': 30}
 
-    # filtered_vacancies = filter_vacancies(vacancies_list, filter_words)
-    #
-    # ranged_vacancies = get_vacancies_by_salary(filtered_vacancies, salary_range)
-    #
-    # sorted_vacancies = sort_vacancies(ranged_vacancies)
-    # top_vacancies = get_top_vacancies(sorted_vacancies, top_n)
-    # print_vacancies(top_vacancies)
-
-
-    hh_api_hh = HhApi()
-    #
-    # text = 'Ленинградская область'
-    # # text = 'Мухосранск'
-    #
-    # id1 = hh_api_hh.get_request_area(area_name=text)
-    # print(f"{text}, id= {id1}")
-
-
-    # area_id = 113 - регион Россия
-    # Мурино: id= 5084
-    # Санкт-Петербург id = 2
-
-    region_id = hh_api_hh.get_request_area(area_name=search_region)
-
-    if region_id is None:
-        res = hh_api_hh.get_request(text=filter_words, per_page=50)
-        print("region_id is None!")
+    if region_id is not None:
+        parameters['area'] = str(region_id)
     else:
-        res = hh_api_hh.get_request(text=filter_words, area=str(region_id), per_page=5)
+        print("region 'search_region' is not found, search everywhere!")
 
-    # URL = 'https://api.hh.ru/vacancies'
+    # url уже есть по умолчанию
+    # Нераспакованый словарь мы значит не берем.
+    # Создание экземпляра класса для работы с платформой HH
+    hh_api_hh = HhApi(**parameters)
 
-    # res = requests.get(URL, params={'text': 'Python'})
+    # res = hh_api_hh.get_vacancies()
+    print(hh_api_hh)
+    # print(res)
 
-    # print(res.status_code)
-    # print(res.json())
-    for item in res:
-        print_dict_recursive(item, 0)
+    # res = hh_api_hh.get_vacancies() - вакансии с первой страницы
+    if hh_api_hh.pages < 2:
+        res = hh_api_hh.get_vacancies()
+    else:
+        res = hh_api_hh.get_vacancies()
+        user_question = input(f"Все результаты поиска вывести? {hh_api_hh.found} - найдено, {hh_api_hh.pages} страниц? y/n")
 
-    print(f"\n\n\n NEXT PAGE \n\n\n")
-    res = hh_api_hh.get_request_next_page()
-    for item in res:
-        print_dict_recursive(item, 0)
+        if user_question in {'y','Y','Н','н',''}:
+
+            for page_request in hh_api_hh:
+                print(f"\n PAGE {hh_api_hh.page} from {hh_api_hh.pages}: \n")
+                for item in page_request:
+                    print(item)
+
+
+    vacancy_constructor = HhVacancyConstructor()
+    vacancy_list = vacancy_constructor.return_vacancy_list_from_json_list(res)
+
+    for v in vacancy_list:
+        print(f"Vacancy: {v}")
+
+
+
+        # print(page_request)
+
+    # res = hh_api_hh.get_request_next_page()
+    #
+    # for item in res:
+    #     print(item)
+    #     # print_dict_recursive(item, 0)
 
 
     # area_id = 113 - регион Россия
