@@ -116,12 +116,12 @@ class HhApi(AbstractApiNoAuth):
             raise Exception(f"Request code= {res.status_code}, request='{URL_area}'")
 
         area = res.json()
-        result = cls.recursive_find_area_id(area, area_name)
+        result = cls.__recursive_find_area_id(area, area_name)
 
         return result
 
     @classmethod
-    def recursive_find_area_id(cls, areas, area_name) -> int | None:
+    def __recursive_find_area_id(cls, areas, area_name) -> int | None:
         """
         Найти в древовидной структуре словаря areas (HH.ru) искомый город
         """
@@ -129,9 +129,68 @@ class HhApi(AbstractApiNoAuth):
             if area['name'] == area_name:
                 return area['id']
             elif isinstance(area['areas'], list) and len(area['areas']) > 0:
-                result = cls.recursive_find_area_id(area['areas'], area_name)
+                result = cls.__recursive_find_area_id(area['areas'], area_name)
                 if result is not None:
                     return result
+            else:
+                continue
+        else:
+            return None
+
+    @classmethod
+    def get_professional_roles(cls) -> list[dict]:
+        """
+        Возвращает справочник профессий
+        """
+        URL_area = 'https://api.hh.ru/professional_roles'
+        res = requests.get(URL_area)
+
+        if res.status_code != 200:
+            raise Exception(f"Request code= {res.status_code}, request='{URL_area}'")
+
+        area = res.json()
+        result = area
+
+        return result
+
+    @classmethod
+    def get_professional_roles_id(cls, role_name: str = 'Информационные технологии') -> int | None:
+        """
+        Возвращает справочник профессий
+        """
+        URL_area = 'https://api.hh.ru/professional_roles'
+        res = requests.get(URL_area)
+
+        if res.status_code != 200:
+            raise Exception(f"Request code= {res.status_code}, request='{URL_area}'")
+
+        professional_roles = res.json()
+        result = cls.__find_professional_role_id(professional_roles, role_name)
+        return result
+
+    @classmethod
+    def __find_professional_role_id(cls, professional_roles, role_name) -> int | list[int] | None:
+        """
+        Найти id по названию профессии
+        """
+        role_name = role_name.lower()
+
+        for role in professional_roles['categories']:
+            # print(f"{role_name}")
+            # print(f"{role}")
+            # print(f"{role_name}, {role}, {role['name']}")
+            if role_name in role['name'].lower().split(', '):
+                roles_list = []
+                for sub_role in role['roles']:
+                    roles_list.append(sub_role['id'])
+
+                # else:
+                #     roles_str += ')'
+                return roles_list
+            elif isinstance(role['roles'], list) and len(role['roles']) > 0:
+                for sub_role in role['roles']:
+                    if role_name.lower() in sub_role['name'].lower().split(', '):
+                        return sub_role['id']
             else:
                 continue
         else:
