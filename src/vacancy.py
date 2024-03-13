@@ -72,8 +72,27 @@ class Vacancy:
 
     def __str__(self):
         repr_list = [str(i[0]) + ': ' + str(i[1]) for i in self.__dict__.items()]
-        delimeter = f'\n\t'
-        return f"Вакансия: {delimeter}{delimeter.join(repr_list)}"
+        delimiter = f'\n\t'
+        return f"Вакансия: {delimiter}{delimiter.join(repr_list)}"
+
+    def serialize(self):
+        dict_vacancy = {key: value for (key, value) in self.__dict__.items()}
+        # dict_variable = {key: value for (key, value) in dictonary.items()}
+        # repr_list = [str(i[0]) + ': ' + str(i[1]) for i in self.__dict__.items()]
+        return dict_vacancy
+
+    @classmethod
+    def deserialize(cls, dict_vacancy):
+        # for vd in cls.__dict__.items():
+        v_list = [dict_vacancy[str(i[0])] for i in dict_vacancy.items()]
+        # print(f"v_list:  {v_list}")
+
+        # v = cls(dict_vacancy["_Vacancy__name"], dict_vacancy["_Vacancy__url"],
+        #                  dict_vacancy["_Vacancy__salary"], dict_vacancy["_Vacancy__region"],
+        #                  dict_vacancy["_Vacancy__requirements"])
+
+        v = cls(*dict_vacancy.values())
+        return v
 
     def is_duplicate(self, other) -> bool:
         """
@@ -93,8 +112,6 @@ class Vacancy:
         else:
             return True
 
-
-
     """
     Методы для операций сравнения:
     __lt__(self, other) — <;
@@ -110,7 +127,7 @@ class Vacancy:
 
     @classmethod
     def __verify_data(cls, other):
-        if not isinstance(other, (cls)):
+        if not isinstance(other, cls):
             raise TypeError(f"'{type(cls)}' can't be compared with '{type(other)}'!")
 
     def __eq__(self, other):

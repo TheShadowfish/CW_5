@@ -1,5 +1,7 @@
 import pytest
 
+from src.vacancy import Vacancy
+
 
 def test_vacancy__init(empty_vacancy, salary_real_vacancy):
     """ Корректность инициализации объектов класса Vacancy"""
@@ -60,6 +62,15 @@ def test_operation__le__(first_real_vacancy, second_real_vacancy, salary_real_va
     assert first_real_vacancy.__le__(second_real_vacancy)
     assert not salary_real_vacancy.__le__(first_real_vacancy)
     assert first_real_vacancy.__le__(salary_real_vacancy)
+
+
+def test_operation_serialise(second_real_vacancy, serialized_second_real_vacancy):
+    assert second_real_vacancy.serialize() == serialized_second_real_vacancy
+
+
+def test_operation_deserialise(second_real_vacancy, serialized_second_real_vacancy):
+    assert Vacancy.deserialize(serialized_second_real_vacancy) == second_real_vacancy
+    assert Vacancy.deserialize(serialized_second_real_vacancy).is_duplicate(second_real_vacancy)
 
 #
 # def test_operation__verify_data(one_right_dict_fixture):

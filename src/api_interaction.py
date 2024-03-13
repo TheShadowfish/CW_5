@@ -1,5 +1,6 @@
 import requests
 from abc import ABC, abstractmethod
+from src.vacancy import Vacancy
 
 
 class AbstractApiNoAuth(ABC):
@@ -24,7 +25,17 @@ class AbstractApiNoAuth(ABC):
         pass
 
 
-class HhApi(AbstractApiNoAuth):
+class VacancyConstructor(ABC):
+    """
+    Абстрактный класс для создания экземпляров класса Vacancy из JSON-запроса
+    """
+
+    @abstractmethod
+    def return_vacancy_list_from_json(self, vacancy_json: list[dict]) -> list[Vacancy]:
+        pass
+
+
+class HhApi(AbstractApiNoAuth, VacancyConstructor):
     """
     Класс для работы с API сервиса hh.ru
     """
@@ -58,17 +69,6 @@ class HhApi(AbstractApiNoAuth):
     def __iter__(self):
         self.current = 0
         return self
-    #
-    # def __next__(self):
-        # if self.current < self.pages:
-        #     number = self.current
-        #     self.current += 1
-        #
-        #     def get_request(self, sub_url: str = 'vacancies', **parameters: dict[str: str]) -> list[dict]:
-        #
-        #     return self.data[number]
-        # else:
-        #     raise StopIteration
 
     def __next__(self) -> list[dict]:
         # URL = 'https://api.hh.ru/vacancies'
@@ -77,43 +77,32 @@ class HhApi(AbstractApiNoAuth):
             self.page = self.current
             self.__parameters['page'] = self.page
             self.current += 1
-                # return self.data[number]
             res = requests.get(self.__url, params=self.__parameters)
             if res.status_code != 200:
                 raise Exception(f"Request code= {res.status_code}, request='{self.__url}', params={self.__parameters}")
-
-            # self.page += 1
-            # self.__parameters['page'] = self.page
-
-            # self.found = res.json()['found']
-            # self.pages = res.json()['pages']
-            # self.page = res.json()['page']
-            # self.per_page = res.json()['per_page']
-
             return res.json()['items']
         else:
             raise StopIteration
 
-
     def __repr__(self):
         repr_list = [str(i[0]) + ': ' + str(i[1]) for i in self.__dict__.items()]
         return f"<{self.__class__.__name__}({', '.join(repr_list)})>"
+
     def __str__(self):
         repr_list = [str(i[0]) + ': ' + str(i[1]) for i in self.__dict__.items()]
-        delimeter = f'\n\t'
-        return f"{self.__class__.__name__}{delimeter}{delimeter.join(repr_list)}"
-
+        delimiter = f'\n\t'
+        return f"{self.__class__.__name__}{delimiter}{delimiter.join(repr_list)}"
 
     @classmethod
     def get_area_id(cls, area_name: str = 'Москва') -> str | None:
         """
         Возврат ID по имени населенного пункта или области
         """
-        URL_area = 'https://api.hh.ru/areas'
-        res = requests.get(URL_area)
+        url_area = 'https://api.hh.ru/areas'
+        res = requests.get(url_area)
 
         if res.status_code != 200:
-            raise Exception(f"Request code= {res.status_code}, request='{URL_area}'")
+            raise Exception(f"Request code= {res.status_code}, request='{url_area}'")
 
         area = res.json()
         result = cls.__recursive_find_area_id(area, area_name)
@@ -142,11 +131,11 @@ class HhApi(AbstractApiNoAuth):
         """
         Возвращает справочник профессий
         """
-        URL_area = 'https://api.hh.ru/professional_roles'
-        res = requests.get(URL_area)
+        url_professional_roles = 'https://api.hh.ru/professional_roles'
+        res = requests.get(url_professional_roles)
 
         if res.status_code != 200:
-            raise Exception(f"Request code= {res.status_code}, request='{URL_area}'")
+            raise Exception(f"Request code= {res.status_code}, request='{url_professional_roles}'")
 
         area = res.json()
         result = area
@@ -158,11 +147,11 @@ class HhApi(AbstractApiNoAuth):
         """
         Возвращает справочник профессий
         """
-        URL_area = 'https://api.hh.ru/professional_roles'
-        res = requests.get(URL_area)
+        url_professional_roles = 'https://api.hh.ru/professional_roles'
+        res = requests.get(url_professional_roles)
 
         if res.status_code != 200:
-            raise Exception(f"Request code= {res.status_code}, request='{URL_area}'")
+            raise Exception(f"Request code= {res.status_code}, request='{url_professional_roles}'")
 
         professional_roles = res.json()
         result = cls.__find_professional_role_id(professional_roles, role_name)
@@ -176,16 +165,10 @@ class HhApi(AbstractApiNoAuth):
         role_name = role_name.lower()
 
         for role in professional_roles['categories']:
-            # print(f"{role_name}")
-            # print(f"{role}")
-            # print(f"{role_name}, {role}, {role['name']}")
             if role_name in role['name'].lower().split(', '):
                 roles_list = []
                 for sub_role in role['roles']:
                     roles_list.append(sub_role['id'])
-
-                # else:
-                #     roles_str += ')'
                 return roles_list
             elif isinstance(role['roles'], list) and len(role['roles']) > 0:
                 for sub_role in role['roles']:
@@ -195,3 +178,62 @@ class HhApi(AbstractApiNoAuth):
                 continue
         else:
             return None
+
+    @staticmethod
+    def return_vacancy_list_from_json(vacancy_json: list[dict]) -> list[Vacancy]:
+        """
+        Парсит полученный JSON - файл и возвращает список (list) объектов Vacancy
+
+        Некоторые ключи в получаемом JSON
+        {
+        'name': 'Стажер-разработчик Python',  !!!!ИМЯ ВАКАНСИИ!!!!
+        'area': {'id': '76', 'name': 'Ростов-на-Дону', 'url': 'https://api.hh.ru/areas/76'},  !!!!ГЕОГРАФИЯ!!!!
+        'salary': {'from': 100000, 'to': 150000, 'currency': 'RUR', 'gross': False}, !!!!ЗАРПЛАТА!!!!
+
+        'published_at': '2024-03-06T16:55:57+0300', !!!!ОПУБЛИКОВАНО!!!!
+        'created_at': '2024-03-06T16:55:57+0300', !!!!СОЗДАНО!!!!
+
+        'alternate_url': 'https://hh.ru/vacancy/94354526', !!!!АДРЕС В БРАУЗЕРЕ!!!!
+
+        'snippet': !!!!ОПИСАНИЕ ВАКАНСИИ!!!!
+        {
+        'requirement': 'Мы ищем <highlighttext>Python</highlighttext>-разработчика, уровнем от Junior и выше,
+        желательно с опытом развития новых продуктов. Уверенные знания <highlighttext>Python</highlighttext> 3.8...',
+        'responsibility': None
+        },
+        'contacts': None,
+        'schedule':{'id': 'fullDay', 'name': 'Полный день'},
+        'professional_roles': [{'id': '96', 'name': 'Программист, разработчик'}], !!!!professional_roles!!!!
+        'experience': {'id': 'noExperience', 'name': 'Нет опыта'}, !!!!ОПЫТ!!!!
+        'employment': {'id': 'full', 'name': 'Полная занятость'},
+
+        """
+        vacancy_list = []
+
+        for elem in vacancy_json:
+            name = elem['name']
+            url = elem['alternate_url']
+            # salary': {'from': 100000, 'to': 150000, 'currency': 'RUR', 'gross': False},
+            if elem['salary']:
+                salary = elem['salary']['from']
+            else:
+                salary = None
+
+            region = elem['area']['name']
+
+            pr_roles = ', '.join([role['name'] for role in elem['professional_roles']])
+
+            # requirements = pr_roles + '. ' + str(elem['snippet']['requirement'])
+            requirements = ''
+            if elem['professional_roles']:
+                requirements = f"Специальность: {', '.join([role['name'] for role in elem['professional_roles']])}. "
+            if elem['snippet']:
+                s = str(elem['snippet']['requirement'])
+                s = s.replace('<highlighttext>', '').replace('</highlighttext>', '')
+                requirements += s
+
+            v = Vacancy(name, url, salary, region, requirements)
+            # print(v)
+            vacancy_list.append(v)
+
+        return vacancy_list
