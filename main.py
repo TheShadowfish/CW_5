@@ -1,119 +1,162 @@
-import requests
+# import requests
+# from typing import Dict, List
+
 from src.api_interaction import HhApi
-from src.connectors import HhVacancyConstructor
+from src.vacancy import Vacancy
+from src.connectors import VacancyJsonConnector
 
 
-def user_interaction(userinput: bool = True):
-    platforms = ["HeadHunter"]
-    search_region = 'Московская область'
-    top_n = 13
-    # filter_words = "Python backend программист fullstack".split()
-    filter_words = "Python"
-    salary_range = '100000 - 150000'
+def user_interaction(test: bool = False):
+    what_to_do = input(f" Сделать запрос с HH.ru (1) \n Загрузить вакансии из файла (2) \n "
+                       f"Загрузить из файла и отфильтровать (3) \n Выход (4) \n")
 
-    if userinput:
-        platforms = ["HeadHunter"]
-        search_region = input("Введите регион или город для поиска вакансий")
-        top_n = int(input("Введите количество вакансий для вывода в топ N: "))
-        filter_words = input("Введите ключевые слова для фильтрации вакансий (через пробел): ").split()
-        salary_range = input("Введите диапазон зарплат: ")  # Пример: 100000 - 150000
+    parameters = user_input(test)
 
-    # найти идентификатор региона
-    region_id = HhApi.get_area_id(area_name=search_region)
+    # vacancy_list = []
 
-    parameters = {'text': filter_words, 'per_page': 30}
+    if what_to_do == '1':
+        vacancy_list = get_request(parameters, test)
 
-    if region_id is not None:
-        parameters['area'] = str(region_id)
+    elif what_to_do == '2':
+        vacancy_list = open_file()
+    elif what_to_do == '3':
+        vacancy_list = apply_filters(user_input(True), open_file())
+        pass
     else:
-        print("region 'search_region' is not found, search everywhere!")
+        exit(0)
 
-    # url уже есть по умолчанию
-    # Нераспакованый словарь мы значит не берем.
-    # Создание экземпляра класса для работы с платформой HH
-    hh_api_hh = HhApi(**parameters)
+    [print(f"{i}) {v}") for i, v in enumerate(vacancy_list, start=1)]
 
-    # res = hh_api_hh.get_vacancies()
-    print(hh_api_hh)
-    # print(res)
+    what_to_do = input(f" Пере-сохранить в файл (1) \n Добавить в файл (2) \n "
+                       f"Отфильтровать (3) \n Выход без сохранения(4) \n")
 
-    # res = hh_api_hh.get_vacancies() - вакансии с первой страницы
-    if hh_api_hh.pages < 2:
-        res = hh_api_hh.get_vacancies()
+    if what_to_do == '1':
+        save_to_file(vacancy_list, True)
+
+    elif what_to_do == '2':
+        save_to_file(vacancy_list, False)
+    elif what_to_do == '3':
+        pass
     else:
-        res = hh_api_hh.get_vacancies()
-        user_question = input(
-            f"Все результаты поиска вывести? {hh_api_hh.found} - найдено, {hh_api_hh.pages} страниц? y/n")
-
-        if user_question in {'y', 'Y', 'Н', 'н', ''}:
-
-            for page_request in hh_api_hh:
-                print(f"\n PAGE {hh_api_hh.page} from {hh_api_hh.pages}: \n")
-                for item in page_request:
-                    print(item)
-
-    vacancy_constructor = HhVacancyConstructor()
-    vacancy_list = vacancy_constructor.return_vacancy_list_from_json_list(res)
-
-    for v in vacancy_list:
-        print(f"{v}")
-
-        # print(page_request)
-
-    # res = hh_api_hh.get_request_next_page()
-    #
-    # for item in res:
-    #     print(item)
-    #     # print_dict_recursive(item, 0)
-
-    # area_id = 113 - регион Россия
-    # Мурино: id= 5084
-    # Санкт-Петербург id = 2
-
-    # text = 'Санкт-Петербург'
-    # text = 'Россия'
-    # text = 'Мурино'
-    # # text = 'Мухосранск'
-    #
-    # id1 = hh_api_hh.get_request_area(area_name=text)
-    # print(f"{text}, id= {id1}")
-
-    # res = hh_api_hh.get_request_area('areas/?area_id=Null')
-    # res = hh_api_hh.get_request_area('areas/?id=1530')
-    # # areas = res.json()
-    # print_areas(res.json())
+        exit(0)
 
 
-# def print_areas(areas):
-#     for area in areas:
-#         if area['name'] == 'Россия':
-#             for area_rf in area['areas']:
-#                 print(f"\t{area_rf['name']}: id= {area_rf['id']}")
-#                 if area_rf['name'] == 'Ленинградская область' or area_rf['name'] == 'Санкт-Петербург':
-#                     for area_sp in area_rf['areas']:
-#                         print(f"\t\t{area_sp['name']}: id= {area_sp['id']}")
-#         else:
-#             print(area['name'])
+def user_input(default: bool = False) -> dict[str, str | int | list[str]]:
+    """
+    Получение и обработка пользовательского ввода или значений по умолчанию
+    """
+    parameters = {'platforms': ['HeadHunter'],
+                  'professional_role': 'Информационные технологии',
+                  'filter_region': 'Архангельск',
+                  'top_n': 13,
+                  'filter_words': ['Python', 'backend', 'программист', 'fullstack'],
+                  'salary_range': '100000 - 150000'
+                  }
 
-def print_dict_recursive(dictionary, i):
-    i += 1
-    for key, value in dictionary.items():
-        if isinstance(value, dict):
-            print(f"{' ' * (i - 1)}{key} =")
-            print_dict_recursive(value, i)
-        elif isinstance(value, list) and len(value) > 0:
-            print(f"{' ' * (i - 1)}{key} = \n[")
-            for l in value:
-                print_dict_recursive(l, i)
-                print(f"{' ' * (i - 1)}{l}")
-            print(f"]\n")
+    if not default:
+        print(f"Введите необходимые параметры запроса/выбора вакансий "
+              f"(отсутствие значения - параметр не используется)")
+        parameters['platforms'] = ["HeadHunter"]
+        parameters['professional_role'] = input("Введите специальность")
+        parameters['filter_region'] = input("Введите регион или город для поиска вакансий")
+
+        parameters['top_n'] = 0
+        top = input("Введите количество вакансий для вывода в топ N: ")
+        if top.isdigit():
+            parameters['top_n'] = int(top)
+
+        parameters['filter_words'] = input("Введите ключевые слова для фильтрации вакансий (через пробел): ").split()
+        parameters['salary_range'] = input("Введите диапазон зарплат: ")  # Пример: 100000 - 150000
+
+    return parameters
+
+
+def get_request(parameters, test: bool = True) -> list[Vacancy]:
+    """
+    platforms = parameters['platforms']
+    professional_role = parameters['professional_role']
+    filter_region = parameters['filter_region']
+    top_n = parameters['top_n']
+    filter_words = parameters['filter_words']
+    salary_range = parameters['salary_range']
+
+    vacancy_list return
+    """
+
+    # найти идентификатор региона и профессии
+    # без этого получаемые данные плохо подходят для сортировки
+    print(f"Get region_id and profession_id from hh.ru... "
+          f"({parameters['filter_region']}, {parameters['professional_role']})")
+
+    region_id = HhApi.get_area_id(area_name=parameters['filter_region'])
+    profession_id = HhApi.get_professional_roles_id(parameters['professional_role'])
+
+    print("Done!")
+
+    # параметры запроса
+    if test:
+        parameters = {'professional_role': profession_id, 'area': region_id, 'per_page': 100}
+    else:
+        parameters['filter_region'] = region_id
+        parameters['professional_role'] = profession_id
+
+    hh_api = HhApi(**parameters)
+    print(f"Get vacation info from hh.ru... ({parameters})")
+    res = hh_api.get_vacancies()
+    print(f"Done!")
+
+    # смотрим, сколько вакансий
+    if test:
+        print(hh_api)
+
+    # res = hh_api.get_vacancies() - вакансии ТОЛЬКО с первой страницы результатов (page = 0)
+
+    user_question = ' '
+    if hh_api.pages > 2:
+        user_question = input(f"Обработать все результаты поиска? {hh_api.found} - найдено на сайте, "
+                              f"выдача {hh_api.pages} страниц по {hh_api.per_page} вакансий? y/n")
+
+    if user_question in {'y', 'Y', 'Н', 'н', ''}:
+        vacancy_list = []
+        for page_request in hh_api:
+            print(f"loaded... Page {hh_api.page + 1} ({hh_api.per_page} per_page) "
+                  f"from {hh_api.pages}: {round((hh_api.page + 1) * 100 / hh_api.pages)} %")
+
+            v_next_page = HhApi.return_vacancy_list_from_json(page_request)
+            vacancy_list.extend(v_next_page)
+
         else:
-            print(f"{' ' * (i - 1)}{key} = {value}")
-    # return questionlist
-    # resdict = dict(res.json())
+            return vacancy_list
+    else:
+        # res = hh_api.get_vacancies()
+        vacancy_list = HhApi.return_vacancy_list_from_json(res)
+        return vacancy_list
+        # [print(v) for v in vacancy_list]
 
 
-def get_my_urlls():
+def open_file() -> list[Vacancy]:
+    json_connector = VacancyJsonConnector()
+
+    v_list_read = json_connector.read_from_file()
+    return v_list_read
+
+
+def apply_filters(parameters: dict, vacancy_list: list[Vacancy]) -> list[Vacancy]:
+    print(parameters)
+    print(vacancy_list)
+    print("under construction!")
+    return vacancy_list
+
+
+def save_to_file(vacancy_list, rewrite: bool = True):
+    json_connector = VacancyJsonConnector()
+    if rewrite:
+        json_connector.write_to_file(vacancy_list)
+    else:
+        json_connector.append_to_file(vacancy_list)
+
+
+def get_my_url_s():
     mas_str = [
         'https://api.hh.ru/openapi/redoc#tag/Poisk-vakansij/Klastery-v-poiske-vakansij',
         'https://spb.hh.ru/article/1175',
@@ -126,4 +169,4 @@ def get_my_urlls():
 
 # начало программы
 if __name__ == '__main__':
-    user_interaction(False)
+    user_interaction(True)
