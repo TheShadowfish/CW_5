@@ -10,35 +10,43 @@ def user_interaction(test: bool = False):
     what_to_do = input(f" Сделать запрос с HH.ru (1) \n Загрузить вакансии из файла (2) \n "
                        f"Загрузить из файла и отфильтровать (3) \n Выход (4) \n")
 
-    parameters = user_input(test)
+
 
     # vacancy_list = []
 
     if what_to_do == '1':
-        vacancy_list = get_request(parameters, test)
-
+        vacancy_list = get_request(user_input(test), test)
     elif what_to_do == '2':
         vacancy_list = open_file()
     elif what_to_do == '3':
-        vacancy_list = apply_filters(user_input(True), open_file())
-        pass
+        vacancy_list = apply_filters(user_input(test), open_file())
     else:
         exit(0)
 
     [print(f"{i}) {v}") for i, v in enumerate(vacancy_list, start=1)]
 
-    what_to_do = input(f" Пере-сохранить в файл (1) \n Добавить в файл (2) \n "
-                       f"Отфильтровать (3) \n Выход без сохранения(4) \n")
+    while True:
 
-    if what_to_do == '1':
-        save_to_file(vacancy_list, True)
+        what_to_do = input(f" Отфильтровать (1) \n Удалить дубликаты (2) \n"
+                           f" Пере-сохранить в файл (3) \n Добавить в файл (4)\n"
+                           f" Загрузить вакансии из файла (5) \n Выход (6) \n")
 
-    elif what_to_do == '2':
-        save_to_file(vacancy_list, False)
-    elif what_to_do == '3':
-        pass
-    else:
-        exit(0)
+        if what_to_do == '1':
+            vacancy_list = Vacancy.apply_filters(vacancy_list, user_input(test))
+        elif what_to_do == '2':
+            vacancy_list = Vacancy.remove_duplicates(vacancy_list)
+        elif what_to_do == '3':
+            save_to_file(vacancy_list, True)
+        elif what_to_do == '4':
+            save_to_file(vacancy_list, False)
+        elif what_to_do == '5':
+            vacancy_list = open_file()
+        elif what_to_do == '6':
+            exit(0)
+        else:
+            pass
+
+        [print(f"{i}) {v}") for i, v in enumerate(vacancy_list, start=1)]
 
 
 def user_input(default: bool = False) -> dict[str, str | int | list[str]]:
@@ -47,26 +55,33 @@ def user_input(default: bool = False) -> dict[str, str | int | list[str]]:
     """
     parameters = {'platforms': ['HeadHunter'],
                   'professional_role': 'Информационные технологии',
-                  'filter_region': 'Архангельск',
-                  'top_n': 13,
+                  'filter_region': 'Санкт-Петербург',
+                  'top_n': 10,
                   'filter_words': ['Python', 'backend', 'программист', 'fullstack'],
-                  'salary_range': '100000 - 150000'
+                  'salary_range': '0 - 300000',
+                  'per_page': 100
                   }
 
     if not default:
         print(f"Введите необходимые параметры запроса/выбора вакансий "
               f"(отсутствие значения - параметр не используется)")
         parameters['platforms'] = ["HeadHunter"]
-        parameters['professional_role'] = input("Введите специальность")
+        parameters['professional_role'] = input("Введите специальность (область деятельности)")
         parameters['filter_region'] = input("Введите регион или город для поиска вакансий")
 
-        parameters['top_n'] = 0
-        top = input("Введите количество вакансий для вывода в топ N: ")
+        top = input(f"Введите количество вакансий для вывода в топ N (default = {parameters['top_n']}): ")
         if top.isdigit():
             parameters['top_n'] = int(top)
 
         parameters['filter_words'] = input("Введите ключевые слова для фильтрации вакансий (через пробел): ").split()
-        parameters['salary_range'] = input("Введите диапазон зарплат: ")  # Пример: 100000 - 150000
+
+        salary_range = input("Введите диапазон зарплат (Пример: 100000 - 150000): ")  # Пример: 100000 - 150000
+
+        salary = [int(s.strip()) for s in parameters['salary_range'].split() if s.isdigit()]
+        if len(salary) != 2 or salary[0] > salary[1]:
+            print(f"Неверный диапазон. Используем значение по умолчанию ({parameters['salary_range']})")
+        else:
+            parameters['salary_range'] = salary_range
 
     return parameters
 
@@ -95,7 +110,7 @@ def get_request(parameters, test: bool = True) -> list[Vacancy]:
 
     # параметры запроса
     if test:
-        parameters = {'professional_role': profession_id, 'area': region_id, 'per_page': 100}
+        parameters = {'professional_role': profession_id, 'area': 113, 'per_page': 100}
     else:
         parameters['filter_region'] = region_id
         parameters['professional_role'] = profession_id
@@ -145,6 +160,10 @@ def apply_filters(parameters: dict, vacancy_list: list[Vacancy]) -> list[Vacancy
     print(parameters)
     print(vacancy_list)
     print("under construction!")
+
+
+
+
     return vacancy_list
 
 
@@ -169,4 +188,4 @@ def get_my_url_s():
 
 # начало программы
 if __name__ == '__main__':
-    user_interaction(True)
+    user_interaction()

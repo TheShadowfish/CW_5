@@ -8,7 +8,7 @@ class Vacancy:
     - регион/город
     - краткое описание или требования
      Класс поддерживает методы сравнения вакансий между собой по зарплате
-    Класси валидирует данные, которыми инициализируются его атрибуты.
+    Класс валидирует данные, которыми инициализируются его атрибуты.
     Способами валидации данных может быть проверка, указана или нет зарплата.
     В этом случае выставлять значение зарплаты 0 или «Зарплата не указана» в зависимости от структуры класса.
 
@@ -45,11 +45,11 @@ class Vacancy:
         return self.__requirements
 
     @staticmethod
-    def validation(**kwargs: dict) -> dict:
+    def validation(**kwargs) -> dict:
         """
         Валидация данных при создании экземпляра класса
         """
-        None_text = 'Не указано'
+        none_text = 'Не указано'
         # 0 или Зарплата не указана
         if kwargs['salary'] is None:
             kwargs['salary'] = 0
@@ -57,13 +57,13 @@ class Vacancy:
             kwargs['salary'] = int(kwargs['salary'])
 
         if kwargs['name'] is None:
-            kwargs['name'] = None_text
+            kwargs['name'] = none_text
         if kwargs['url'] is None:
-            kwargs['url'] = None_text
+            kwargs['url'] = none_text
         if kwargs['region'] is None:
-            kwargs['region'] = None_text
+            kwargs['region'] = none_text
         if kwargs['requirements'] is None:
-            kwargs['requirements'] = None_text
+            kwargs['requirements'] = none_text
         return kwargs
 
     def __repr__(self):
@@ -77,20 +77,10 @@ class Vacancy:
 
     def serialize(self):
         dict_vacancy = {key: value for (key, value) in self.__dict__.items()}
-        # dict_variable = {key: value for (key, value) in dictonary.items()}
-        # repr_list = [str(i[0]) + ': ' + str(i[1]) for i in self.__dict__.items()]
         return dict_vacancy
 
     @classmethod
     def deserialize(cls, dict_vacancy):
-        # for vd in cls.__dict__.items():
-        v_list = [dict_vacancy[str(i[0])] for i in dict_vacancy.items()]
-        # print(f"v_list:  {v_list}")
-
-        # v = cls(dict_vacancy["_Vacancy__name"], dict_vacancy["_Vacancy__url"],
-        #                  dict_vacancy["_Vacancy__salary"], dict_vacancy["_Vacancy__region"],
-        #                  dict_vacancy["_Vacancy__requirements"])
-
         v = cls(*dict_vacancy.values())
         return v
 
@@ -111,6 +101,84 @@ class Vacancy:
                 return False
         else:
             return True
+
+    @staticmethod
+    def remove_duplicates(vacancy_list: list) -> list:
+        different_vacancies = []
+        for v in vacancy_list:
+            for v_checked in different_vacancies:
+                if v.is_duplicate(v_checked):
+                    break
+            else:
+                different_vacancies.append(v)
+        return different_vacancies
+
+    @staticmethod
+    def apply_filters(vacancy_list: list, parameters: dict) -> list:
+        """
+        :param parameters:
+            parameters['platforms']
+            professional_role = parameters['professional_role']
+            parameters['filter_region']
+            parameters['top_n']
+            parameters['filter_words']
+            salary_range = parameters['salary_range']
+        :param vacancy_list:
+        :return: filtered vacancy_list:
+
+        self.__name = valid_data['name']
+        self.__url = valid_data['url']
+        self.__salary = valid_data['salary']
+        self.__region = valid_data['region']
+        self.__requirements = valid_data['requirements']
+        """
+        filtered_vacancy_list = []
+        filter_list = parameters['filter_words'][:] #).append(parameters['professional_role'])
+        filter_list.append(parameters['professional_role'])
+        filter_list = [f for f in filter_list if f != '']
+        # print(filter_list)
+        # print(parameters['filter_words'])
+        # print(parameters['professional_role'])
+
+        salary = [int(s.strip()) for s in parameters['salary_range'].split() if s.isdigit()]
+
+        # Геморрой с этими диапазонами страшный >_< (#!@!#)
+        # if 0 < len(salary) < 2:
+        #     salary.append(salary[0])
+        #     salary[0] = 0
+        #
+        #     print(f"Salary {salary}")
+        # elif len(salary) == 2 and salary[0] > salary[1]:
+        #     s = s[0]
+        #     salary[0] = salary[1]
+        #     salary[1] = s
+        #
+        #     print(f"Salary {salary}")
+
+
+        for vac in vacancy_list:
+            append = True
+
+            if len(salary) == 2 and (salary[0] >= vac.salary or salary[1] <= vac.salary):
+                append = False
+
+            elif parameters['filter_region'] != '' and parameters['filter_region'] != vac.region:
+                append = False
+
+            elif len(filter_list) > 0:
+                for word in filter_list:
+                    if word in vac.requirements or word in vac.name:
+                        break
+                else:
+                    append = False
+
+            if append:
+                # input(f"TRUE!!, \n {parameters} \n  {vac}? True?")
+                filtered_vacancy_list.append(vac)
+            else:
+                pass
+
+        return (sorted(filtered_vacancy_list, reverse=True))[0:parameters['top_n']]
 
     """
     Методы для операций сравнения:
