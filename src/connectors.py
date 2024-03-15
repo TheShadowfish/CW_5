@@ -4,16 +4,6 @@ from abc import ABC, abstractmethod
 from src.vacancy import Vacancy
 
 
-# class VacancyConstructor(ABC):
-#     """
-#     Абстрактный класс для создания экземпляров класса Vacancy из JSON-запроса
-#     """
-#
-#     @abstractmethod
-#     def return_vacancy_list_from_json(self, vacancy_json: list[dict]) -> list[Vacancy]:
-#         pass
-
-
 class VacancyFileConnector(ABC):
     """
     Чтение и запись вакансий в файл
@@ -37,7 +27,7 @@ class VacancyJsonConnector(VacancyFileConnector):
     def __init__(self, filename: str = "vacancy.json"):
         self.__filename = filename
 
-    def read_from_file(self, filename: str = '', **parameters) -> list[Vacancy]:
+    def read_from_file(self, filename: str = '') -> list[Vacancy]:
         """
         Загружает информацию файла vacancy.json в папке data(по умолчанию)
         filename - название файла
@@ -78,7 +68,7 @@ class VacancyJsonConnector(VacancyFileConnector):
             with open(filepath, "wt") as write_file:
                 json.dump(dictionary_list, write_file)
 
-        except Exception as e:
+        except OSError as e:
             print(f"Something went wrong. I can't write \"{filepath}\", {str(e)}")
         # finally:
         #     return success

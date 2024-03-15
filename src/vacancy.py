@@ -133,7 +133,10 @@ class Vacancy:
         self.__requirements = valid_data['requirements']
         """
         filtered_vacancy_list = []
-        filter_list = parameters['filter_words'][:] #).append(parameters['professional_role'])
+        if isinstance(parameters['filter_words'], list):
+            filter_list = parameters['filter_words'][:]  # ).append(parameters['professional_role'])
+        else:
+            filter_list = [parameters['filter_words']]
         filter_list.append(parameters['professional_role'])
         filter_list = [f for f in filter_list if f != '']
         # print(filter_list)
@@ -141,20 +144,6 @@ class Vacancy:
         # print(parameters['professional_role'])
 
         salary = [int(s.strip()) for s in parameters['salary_range'].split() if s.isdigit()]
-
-        # Геморрой с этими диапазонами страшный >_< (#!@!#)
-        # if 0 < len(salary) < 2:
-        #     salary.append(salary[0])
-        #     salary[0] = 0
-        #
-        #     print(f"Salary {salary}")
-        # elif len(salary) == 2 and salary[0] > salary[1]:
-        #     s = s[0]
-        #     salary[0] = salary[1]
-        #     salary[1] = s
-        #
-        #     print(f"Salary {salary}")
-
 
         for vac in vacancy_list:
             append = True
