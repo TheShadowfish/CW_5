@@ -72,6 +72,23 @@ def test_operation_deserialise(second_real_vacancy, serialized_second_real_vacan
     assert Vacancy.deserialize(serialized_second_real_vacancy) == second_real_vacancy
     assert Vacancy.deserialize(serialized_second_real_vacancy).is_duplicate(second_real_vacancy)
 
+
+def test_remove_duplicates(test_filters):
+    assert len(test_filters) == 10
+    assert len(Vacancy.remove_duplicates(test_filters)) == len(test_filters) - 1
+
+
+def test_apply_filter(test_filters, parameters):
+    assert len(Vacancy.apply_filters(test_filters, parameters)) == 4
+    parameters['salary_range'] = ''
+    assert len(Vacancy.apply_filters(test_filters, parameters)) == 6
+    parameters['professional_role'] = ''
+    parameters['filter_words'] = ''
+    assert len(Vacancy.apply_filters(test_filters, parameters)) == 7
+
+
+
+
 #
 # def test_operation__verify_data(one_right_dict_fixture):
 #     op1 = Operation(one_right_dict_fixture)

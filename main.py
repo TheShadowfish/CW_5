@@ -77,16 +77,20 @@ def user_input(default: bool = False) -> dict[str, str | int | list[str]]:
 
         salary_range = input("Введите диапазон зарплат (Пример: 100000 - 150000): ")  # Пример: 100000 - 150000
 
-        salary = [int(s.strip()) for s in parameters['salary_range'].split() if s.isdigit()]
-        if len(salary) != 2 or salary[0] > salary[1]:
-            print(f"Неверный диапазон. Используем значение по умолчанию ({parameters['salary_range']})")
-        else:
+        if salary_range == '':
             parameters['salary_range'] = salary_range
+        else:
+            salary = [int(s.strip()) for s in salary_range.split('-') if s.strip().isdigit()]
+            # input(f'{salary}/// see')
+            if len(salary) != 2 or salary[0] > salary[1]:
+                print(f"Неверный диапазон. Используем значение по умолчанию ({parameters['salary_range']})")
+            else:
+                parameters['salary_range'] = salary_range
 
     return parameters
 
 
-def get_request(parameters, test: bool = True) -> list[Vacancy]:
+def get_request(parameters_input, test: bool = True) -> list[Vacancy]:
     """
     platforms = parameters['platforms']
     professional_role = parameters['professional_role']
@@ -97,6 +101,7 @@ def get_request(parameters, test: bool = True) -> list[Vacancy]:
 
     vacancy_list return
     """
+    parameters = parameters_input.copy()
 
     # найти идентификатор региона и профессии
     # без этого получаемые данные плохо подходят для сортировки
@@ -109,16 +114,29 @@ def get_request(parameters, test: bool = True) -> list[Vacancy]:
     print("Done!")
 
     # параметры запроса
-    if test:
-        parameters = {'professional_role': profession_id, 'area': 113, 'per_page': 100}
-    else:
-        parameters['filter_region'] = region_id
-        parameters['professional_role'] = profession_id
+    # if not test:
+    #     parameters = {'professional_role': profession_id, 'area': region_id, 'per_page': 100}
+    # else:
+    parameters['area'] = region_id
+    parameters['professional_role'] = profession_id
+    parameters['text'] = parameters['filter_words']
+
+    if parameters['salary_range'] != '':
+        salary = [int(s.strip()) for s in parameters['salary_range'].split('-') if s.strip().isdigit()]
+        # print(parameters['salary_range'])
+        # print(salary)
+        # print(sum(salary) // 2)
+
+        parameters['salary'] = sum(salary) // 2
+        parameters['only_with_salary'] = True
+
+        print(salary)
 
     hh_api = HhApi(**parameters)
     print(f"Get vacation info from hh.ru... ({parameters})")
     res = hh_api.get_vacancies()
     print(f"Done!")
+    # print(res)
 
     # смотрим, сколько вакансий
     if test:
