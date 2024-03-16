@@ -4,6 +4,7 @@
 from src.api_interaction import HhApi
 from src.vacancy import Vacancy
 from src.connectors import VacancyJsonConnector
+from src.connectors import VacancyCsvConnector
 
 
 def user_interaction(test: bool = False):
@@ -28,8 +29,10 @@ def user_interaction(test: bool = False):
     while True:
 
         what_to_do = input(f" Отфильтровать (1) \n Удалить дубликаты (2) \n"
-                           f" Пере-сохранить в файл (3) \n Добавить в файл (4)\n"
-                           f" Загрузить вакансии из файла (5) \n Выход (6) \n")
+                           f" Пере-сохранить в файл JSON (3) \n Добавить в файл JSON (4)\n"
+                           f" Загрузить вакансии из файла JSON (5) \n"
+                           f" Пере-сохранить в файл CSV (6) \n Добавить в CSV-файл (7) \n"
+                           f" Выход (8) \n")
 
         if what_to_do == '1':
             vacancy_list = Vacancy.apply_filters(vacancy_list, user_input(test))
@@ -42,11 +45,17 @@ def user_interaction(test: bool = False):
         elif what_to_do == '5':
             vacancy_list = open_file()
         elif what_to_do == '6':
+            csv_connector = VacancyCsvConnector()
+            csv_connector.write_to_file(vacancy_list)
+        elif what_to_do == '7':
+            csv_connector = VacancyCsvConnector()
+            csv_connector.append_to_file(vacancy_list)
+        elif what_to_do == '8':
             exit(0)
         else:
             pass
 
-        [print(f"{i}) {v}") for i, v in enumerate(vacancy_list, start=1)]
+        # [print(f"{i}) {v}") for i, v in enumerate(vacancy_list, start=1)]
 
 
 def user_input(default: bool = False) -> dict[str, str | int | list[str]]:

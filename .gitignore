@@ -160,3 +160,4 @@ cython_debug/
 .idea/
 /data/vacancy.json
 /data/test.json
+/data/vacancy.csv
