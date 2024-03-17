@@ -237,3 +237,40 @@ class HhApi(AbstractApiNoAuth, VacancyConstructor):
             vacancy_list.append(v)
 
         return vacancy_list
+
+    @classmethod
+    def check_parameters_to_request(cls, parameters: dict) -> dict:
+        """
+        Проверка параметров для последующей передачи в запрос к Api
+
+        Ключи словаря parameters после user_input:
+
+        platforms = parameters['platforms']
+        professional_role = parameters['professional_role']
+        filter_region = parameters['filter_region']
+        top_n = parameters['top_n']
+        filter_words = parameters['filter_words']
+        salary_range = parameters['salary_range']
+        """
+
+        # найти идентификатор региона и профессии
+        # без этого получаемые данные плохо подходят для сортировки
+        print(f"Get region_id and profession_id from hh.ru... "
+              f"({parameters['filter_region']}, {parameters['professional_role']})")
+
+        region_id = cls.get_area_id(parameters['filter_region'])
+        profession_id = cls.get_professional_roles_id(parameters['professional_role'])
+
+        print("Done!")
+
+        # параметры запроса
+        parameters['area'] = region_id
+        parameters['professional_role'] = profession_id
+        parameters['text'] = ' AND '.join(parameters['filter_words'])
+
+        if parameters['salary_range'] != '':
+            salary = [int(s.strip()) for s in parameters['salary_range'].split('-') if s.strip().isdigit()]
+            parameters['salary'] = sum(salary) // 2
+            parameters['only_with_salary'] = True
+
+        return parameters
