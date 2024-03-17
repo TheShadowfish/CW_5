@@ -11,7 +11,7 @@ class VacancyFileConnector(ABC):
     """
 
     @abstractmethod
-    def read_from_file(self, filename: str) -> list[Vacancy]:
+    def read_from_file(self, filename: str = '') -> list[Vacancy]:
         pass
 
     @abstractmethod
@@ -71,11 +71,10 @@ class VacancyJsonConnector(VacancyFileConnector):
 
     def append_to_file(self, vacancy_list: list[Vacancy]):
         """
-        Пишет в файл vacancy.json в директории data.
-        Добавляет данные в конец файла
+        Читает файл vacancy.json в директории data,
+        добавляет к прочитанному имеющиеся вакансии,
+        перезаписывает файл.
         """
-        # относительный путь - в папке data запускаемого проекта
-        filepath = os.path.join('data', self.__filename)
 
         file_v_list = self.read_from_file()
         file_v_list.extend(vacancy_list)
@@ -135,11 +134,10 @@ class VacancyCsvConnector(VacancyFileConnector):
 
     def append_to_file(self, vacancy_list: list[Vacancy]):
         """
-        Пишет в файл vacancy.csv в директории data.
-        Добавляет данные в конец файла
+        Читает файл vacancy.csv в директории data,
+        добавляет к прочитанному имеющиеся вакансии,
+        перезаписывает файл.
         """
-        # относительный путь - в папке data запускаемого проекта
-        filepath = os.path.join('data', self.__filename)
 
         file_v_list = self.read_from_file()
         file_v_list.extend(vacancy_list)
@@ -205,11 +203,10 @@ class VacancyTxtConnector(VacancyFileConnector):
 
     def append_to_file(self, vacancy_list: list[Vacancy]):
         """
-        Пишет в файл vacancy.csv в директории data.
-        Добавляет данные в конец файла
+        Читает файл vacancy.txt в директории data,
+        добавляет к прочитанному имеющиеся вакансии,
+        перезаписывает файл.
         """
-        # относительный путь - в папке data запускаемого проекта
-        filepath = os.path.join('data', self.__filename)
 
         file_v_list = self.read_from_file()
         file_v_list.extend(vacancy_list)

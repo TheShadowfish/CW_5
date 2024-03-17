@@ -16,9 +16,7 @@ def user_interaction():
                        f" Загрузить из файла CSV и отфильтровать (6) \n"
                        f" Загрузить из файла TXT и отфильтровать (7) \n Выход (8) \n")
 
-
-
-    vacancy_list = []
+    # vacancy_list = []
     json_connector = VacancyJsonConnector()
     csv_connector = VacancyCsvConnector()
     txt_connector = VacancyTxtConnector()
