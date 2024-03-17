@@ -52,8 +52,24 @@ def test_hh_api_get_vacancies(parameters):
         assert api_hh.get_vacancies()
 
 
-def test_return_vacancy_fron_json(json_list_one_vac):
+def test_return_vacancy_from_json(json_list_one_vac):
     vac_list = HhApi.return_vacancy_list_from_json(json_list_one_vac)
     assert len(vac_list) > 0
 
 
+def test_check_parameters_to_request(parameters):
+    parameters_checked = HhApi.check_parameters_to_request(parameters)
+    parameters = {'platforms': ['HeadHunter'],
+                  'professional_role': 'Разработчик',
+                  'filter_region': 'Санкт-Петербург',
+                  'top_n': 7,
+                  'filter_words': ['Python', 'backend', 'программист', 'fullstack'],
+                  'salary_range': '50000 - 101000',
+                  'per_page': 100
+                  }
+
+    assert parameters_checked.get('area') is not None
+    assert parameters_checked.get('professional_role') != parameters['professional_role']
+    assert parameters_checked.get('text') is not None
+    assert parameters_checked.get('salary') is not None
+    assert parameters_checked.get('only_with_salary') is not None
