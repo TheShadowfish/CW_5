@@ -162,3 +162,5 @@ cython_debug/
 /data/test.json
 /data/vacancy.csv
 /data/vacancy.txt
+/data/test.txt
+/data/test.csv

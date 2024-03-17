@@ -30,8 +30,9 @@ class VacancyConstructor(ABC):
     Абстрактный класс для создания экземпляров класса Vacancy из JSON-запроса
     """
 
+    @staticmethod
     @abstractmethod
-    def return_vacancy_list_from_json(self, vacancy_json: list[dict]) -> list[Vacancy]:
+    def return_vacancy_list_from_json(vacancy_json: list[dict]) -> list[Vacancy]:
         pass
 
 
@@ -181,6 +182,7 @@ class HhApi(AbstractApiNoAuth, VacancyConstructor):
 
     @staticmethod
     def return_vacancy_list_from_json(vacancy_json: list[dict]) -> list[Vacancy]:
+
         """
         Парсит полученный JSON - файл и возвращает список (list) объектов Vacancy
 
@@ -213,6 +215,7 @@ class HhApi(AbstractApiNoAuth, VacancyConstructor):
         for elem in vacancy_json:
             name = elem['name']
             url = elem['alternate_url']
+
             # salary': {'from': 100000, 'to': 150000, 'currency': 'RUR', 'gross': False},
             if elem['salary']:
                 salary = elem['salary']['from']
@@ -221,9 +224,6 @@ class HhApi(AbstractApiNoAuth, VacancyConstructor):
 
             region = elem['area']['name']
 
-            pr_roles = ', '.join([role['name'] for role in elem['professional_roles']])
-
-            # requirements = pr_roles + '. ' + str(elem['snippet']['requirement'])
             requirements = ''
             if elem['professional_roles']:
                 requirements = f"Специальность: {', '.join([role['name'] for role in elem['professional_roles']])}. "
@@ -233,7 +233,6 @@ class HhApi(AbstractApiNoAuth, VacancyConstructor):
                 requirements += s
 
             v = Vacancy(name, url, salary, region, requirements)
-            # print(v)
             vacancy_list.append(v)
 
         return vacancy_list
