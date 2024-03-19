@@ -51,10 +51,3 @@ def test_read(test_filters):
     json_v_connector = VacancyJsonConnector()
     with pytest.raises(FileNotFoundError):
         assert txt_v_connector.read_from_file('not_found.json')
-
-    # try:
-    #     json_v_connector.read_from_file()
-    # except FileNotFoundError:
-    #     pass
-    # else:
-    #     assert len(json_v_connector.read_from_file()) >= 0
