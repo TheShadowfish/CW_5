@@ -20,14 +20,14 @@ def test_vacancy__init(empty_vacancy, salary_real_vacancy):
 
 
 def test_vacancy__str__repr(second_real_vacancy):
-    assert second_real_vacancy.__str__() == (f'Вакансия: \n'
+    assert second_real_vacancy.__str__() == ('Вакансия: \n'
                                              '\t_Vacancy__name: Разработчик Python.\n'
                                              '\t_Vacancy__url: ссылка на сайт\n'
                                              '\t_Vacancy__salary: 100500\n'
                                              '\t_Vacancy__region: Санкт-Петербург\n'
                                              '\t_Vacancy__requirements: Много разного')
 
-    assert second_real_vacancy.__repr__() == (f'<Vacancy(_Vacancy__name: Разработчик Python., '
+    assert second_real_vacancy.__repr__() == ('<Vacancy(_Vacancy__name: Разработчик Python., '
                                               '_Vacancy__url: ссылка на сайт, '
                                               '_Vacancy__salary: 100500, _Vacancy__region: Санкт-Петербург, '
                                               '_Vacancy__requirements: Много разного)>')
@@ -85,12 +85,3 @@ def test_apply_filter(test_filters, parameters):
     parameters['professional_role'] = ''
     parameters['filter_words'] = ''
     assert len(Vacancy.apply_filters(test_filters, parameters)) == 7
-
-
-
-
-#
-# def test_operation__verify_data(one_right_dict_fixture):
-#     op1 = Operation(one_right_dict_fixture)
-#     with pytest.raises(TypeError):
-#         op1.__eq__('no_operation_no_datetime')

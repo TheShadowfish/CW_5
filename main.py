@@ -8,13 +8,13 @@ from src.connectors import VacancyFileConnector
 
 
 def user_interaction():
-    what_to_do = input(f" Сделать запрос с HH.ru (1) \n"
-                       f" Загрузить вакансии из файла JSON (2) \n"
-                       f" Загрузить вакансии из файла CSV (3) \n"
-                       f" Загрузить вакансии из файла TXT (4) \n"
-                       f" Загрузить из файла JSON и отфильтровать (5) \n"
-                       f" Загрузить из файла CSV и отфильтровать (6) \n"
-                       f" Загрузить из файла TXT и отфильтровать (7) \n Выход (8) \n")
+    what_to_do = input(" Сделать запрос с HH.ru (1) \n"
+                       " Загрузить вакансии из файла JSON (2) \n"
+                       " Загрузить вакансии из файла CSV (3) \n"
+                       " Загрузить вакансии из файла TXT (4) \n"
+                       " Загрузить из файла JSON и отфильтровать (5) \n"
+                       " Загрузить из файла CSV и отфильтровать (6) \n"
+                       " Загрузить из файла TXT и отфильтровать (7) \n Выход (8) \n")
 
     # vacancy_list = []
     json_connector = VacancyJsonConnector()
@@ -45,13 +45,13 @@ def user_interaction():
 
     while True:
 
-        what_to_do = input(f" Отфильтровать (1) \n Удалить дубликаты (2) \n"
-                           f" Пере-сохранить в файл JSON (3) \n Добавить в файл JSON (4)\n"
-                           f" Загрузить вакансии из файла JSON (5) \n"
-                           f" Пере-сохранить в файл CSV (6) \n Добавить в CSV-файл (7) \n"
-                           f" Загрузить вакансии из файла CSV (8) \n"
-                           f" Пере-сохранить в файл TXT (9) \n Добавить в TXT-файл (10) \n"
-                           f" Загрузить вакансии из файла TXT (11) \n Выход (12) \n")
+        what_to_do = input(" Отфильтровать (1) \n Удалить дубликаты (2) \n"
+                           " Пере-сохранить в файл JSON (3) \n Добавить в файл JSON (4)\n"
+                           " Загрузить вакансии из файла JSON (5) \n"
+                           " Пере-сохранить в файл CSV (6) \n Добавить в CSV-файл (7) \n"
+                           " Загрузить вакансии из файла CSV (8) \n"
+                           " Пере-сохранить в файл TXT (9) \n Добавить в TXT-файл (10) \n"
+                           " Загрузить вакансии из файла TXT (11) \n Выход (12) \n")
 
         if what_to_do == '1':
             vacancy_list = Vacancy.apply_filters(vacancy_list, user_input(False))
@@ -99,8 +99,8 @@ def user_input(default: bool = False) -> dict[str, str | int | list[str]]:
                   }
 
     if not default:
-        print(f"Введите необходимые параметры запроса/выбора вакансий "
-              f"(отсутствие значения - параметр не используется)")
+        print("Введите необходимые параметры запроса/выбора вакансий "
+              "(отсутствие значения - параметр не используется)")
         parameters['platforms'] = ["HeadHunter"]
         parameters['professional_role'] = input("Введите специальность (область деятельности)")
         parameters['filter_region'] = input("Введите регион или город для поиска вакансий")
@@ -145,7 +145,7 @@ def get_request_info(parameters_input, api_type: str = 'HeadHunter') -> list[Vac
 
         print(f"Get vacation info from hh.ru... ({parameters})")
         res = hh_api.get_vacancies()
-        print(f"Done!")
+        print("Done!")
 
         # смотрим, сколько вакансий
         print(hh_api)

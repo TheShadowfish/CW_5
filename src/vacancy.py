@@ -10,7 +10,8 @@ class Vacancy:
      Класс поддерживает методы сравнения вакансий между собой по зарплате
     Класс валидирует данные, которыми инициализируются его атрибуты.
     Способами валидации данных может быть проверка, указана или нет зарплата.
-    В этом случае выставлять значение зарплаты 0 или «Зарплата не указана» в зависимости от структуры класса.
+    В этом случае выставлять значение зарплаты 0 или «Зарплата не указана»
+    в зависимости от структуры класса.
 
     """
 
@@ -72,7 +73,7 @@ class Vacancy:
 
     def __str__(self):
         repr_list = [str(i[0]) + ': ' + str(i[1]) for i in self.__dict__.items()]
-        delimiter = f'\n\t'
+        delimiter = '\n\t'
         return f"Вакансия: {delimiter}{delimiter.join(repr_list)}"
 
     def serialize(self):
@@ -134,7 +135,7 @@ class Vacancy:
         """
         filtered_vacancy_list = []
         if isinstance(parameters['filter_words'], list):
-            filter_list = parameters['filter_words'][:]  # ).append(parameters['professional_role'])
+            filter_list = parameters['filter_words'][:]
         else:
             filter_list = [parameters['filter_words']]
         filter_list.append(parameters['professional_role'])
@@ -177,8 +178,8 @@ class Vacancy:
     __ne__(self, other) — !=;
     __gt__(self, other) — >;
     __ge__(self, other) — >=.
-    для определения операций сравнения достаточно в классе определить только три метода: ==, <, <=, 
-    если остальные являются их симметричной противоположностью. 
+    для определения операций сравнения достаточно в классе определить только три метода: ==, <, <=,
+    если остальные являются их симметричной противоположностью.
     В этом случае язык Python сам подберет нужный метод и выполнит его при сравнении объектов.
     """
 
