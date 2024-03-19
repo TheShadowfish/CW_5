@@ -91,7 +91,7 @@ class HhApi(AbstractApiNoAuth, VacancyConstructor):
 
     def __str__(self):
         repr_list = [str(i[0]) + ': ' + str(i[1]) for i in self.__dict__.items()]
-        delimiter = f'\n\t'
+        delimiter = '\n\t'
         return f"{self.__class__.__name__}{delimiter}{delimiter.join(repr_list)}"
 
     @classmethod
