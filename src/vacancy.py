@@ -15,7 +15,7 @@ class Vacancy:
 
     """
 
-    # __slots__ = ('__name', '__url', '__salary', '__region', '__requirements')
+    __slots__ = ('__name', '__url', '__salary', '__region', '__requirements')
 
     def __init__(self, name: str, url: str, salary: str, region: str, requirements: str):
         valid_data = self.validation(name=name, url=url, salary=salary, region=region, requirements=requirements)
@@ -66,6 +66,32 @@ class Vacancy:
         if kwargs['requirements'] is None:
             kwargs['requirements'] = none_text
         return kwargs
+
+    @property
+    def __dict__(self) -> dict:
+        """
+        Использование __slots__ ломает обращение к __dict__ который был бы полезен в контексте дальнейшего
+        изменения класса и добавления новых аттрибутов. Чтобы не переписывать его во всех функциях, создаем
+        словарь из параметров класса.
+        При изменении и добавлении параметров в класс эту функцию ОБЯЗАТЕЛЬНО нужно переписывать
+        _Vacancy__name: Разработчик в зоопарк.
+        _Vacancy__url: https://moscowzoo.ru/
+        _Vacancy__salary: 100500999
+        _Vacancy__region: Москва
+        _Vacancy__requirements: Необходимо умение GNUть антилоп и гладить манула. Опыт по взаимодействию с python'ом.
+        PS: Даже если так в коде делать нельзя, мне об этом не говорили.
+        """
+        artifical__dict = {}
+        artifical__dict['_Vacancy' + str(self.__slots__[0])] = self.__name
+        artifical__dict['_Vacancy' + str(self.__slots__[1])] = self.__url
+        artifical__dict['_Vacancy' + str(self.__slots__[2])] = self.__salary
+        artifical__dict['_Vacancy' + str(self.__slots__[3])] = self.__region
+        artifical__dict['_Vacancy' + str(self.__slots__[4])] = self.__requirements
+
+        # Чтобы избежать ошибок, положим грабельки сразу.
+        assert len(artifical__dict) == len(self.__slots__)
+
+        return artifical__dict
 
     def __repr__(self):
         repr_list = [str(i[0]) + ': ' + str(i[1]) for i in self.__dict__.items()]
