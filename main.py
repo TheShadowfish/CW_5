@@ -154,11 +154,72 @@ def get_request_info(parameters_input, api_type: str = 'HeadHunter') -> list[Vac
 
         if user_question in {'y', 'Y', 'Н', 'н', ''}:
             vacancy_list = []
+
+            employer_list = []
+
+
             for page_request in hh_api:
                 print(f"loaded... Page {hh_api.page + 1} ({hh_api.per_page} per_page) "
                       f"from {hh_api.pages}: {round((hh_api.page + 1) * 100 / hh_api.pages)} %")
 
                 v_next_page = HhApi.return_vacancy_list_from_json(page_request)
+                vacancy_list.extend(v_next_page)
+
+            else:
+                return vacancy_list
+        else:
+            # res = hh_api.get_vacancies() - вакансии ТОЛЬКО с первой страницы результатов (page = 0)
+            vacancy_list = HhApi.return_vacancy_list_from_json(res)
+            return vacancy_list
+            # [print(v) for v in vacancy_list]
+
+
+def get_request_info(parameters_input, api_type: str = 'HeadHunter') -> list[Vacancy]:
+    """
+    Проверка параметров ввода от пользователя, создание экземпляра HhApi, передача параметров в HhApi,
+    возврат результатов в списке
+    """
+    # print(salary)
+    get_employeers: bool = True
+
+
+    if api_type not in parameters_input['platforms']:
+        raise NotImplementedError(f"С платформой {api_type} взаимодействие пока не реализовано")
+
+    if api_type == 'HeadHunter':
+
+        parameters = HhApi.check_parameters_to_request(parameters_input)
+
+        print(f"Parameters {parameters}")
+
+        hh_api = HhApi(**parameters)
+
+        print(f"Get vacation info from hh.ru... ({parameters})")
+        res = hh_api.get_vacancies()
+        print("Done!")
+
+        # смотрим, сколько вакансий
+        print(hh_api)
+
+        user_question = ''
+        if hh_api.pages > 2:
+            user_question = input(f"Обработать все результаты поиска? {hh_api.found} - найдено на сайте, "
+                                  f"выдача {hh_api.pages} страниц по {hh_api.per_page} вакансий? y/n")
+
+        if user_question in {'y', 'Y', 'Н', 'н', ''}:
+            vacancy_list = []
+
+            employer_list = []
+
+            for page_request in hh_api:
+                print(f"loaded... Page {hh_api.page + 1} ({hh_api.per_page} per_page) "
+                      f"from {hh_api.pages}: {round((hh_api.page + 1) * 100 / hh_api.pages)} %")
+
+                v_next_page = HhApi.return_vacancy_list_from_json(page_request)
+                if get_employeers:
+                    HhApi.return_employer_list_from_json(page_request)
+                    get_employeers = False
+
                 vacancy_list.extend(v_next_page)
 
             else:

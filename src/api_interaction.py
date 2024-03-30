@@ -1,6 +1,6 @@
 import requests
 from abc import ABC, abstractmethod
-from src.vacancy import Vacancy
+from src.vacancy import Vacancy, Employeer
 
 
 class AbstractApiNoAuth(ABC):
@@ -236,6 +236,67 @@ class HhApi(AbstractApiNoAuth, VacancyConstructor):
             vacancy_list.append(v)
 
         return vacancy_list
+
+    def return_employer_list_from_json(vacancy_json: list[dict]) -> list[Employeer]:
+
+        """
+        Парсит полученный JSON - файл и возвращает список (list) объектов Vacancy
+
+        Некоторые ключи в получаемом JSON
+        {
+        ...
+        'employer':
+            {
+            'id': '1795976',
+            'name': 'Университет ИТМО',
+            'url': 'https://api.hh.ru/employers/1795976',
+            'alternate_url': 'https://hh.ru/employer/1795976',
+            'logo_urls':
+                {
+                'original': 'https://img.hhcdn.ru/employer-logo-original/1008510.jpg',
+                '90': 'https://img.hhcdn.ru/employer-logo/5654816.jpeg',
+                '240': 'https://img.hhcdn.ru/employer-logo/5654817.jpeg'
+                },
+            'vacancies_url': 'https://api.hh.ru/vacancies?employer_id=1795976',
+            'accredited_it_employer': False,
+            'trusted': True
+            },
+        ...
+        }
+
+        """
+        emplorer_list = []
+
+        for i, elem in enumerate(vacancy_json, start =1):
+            # print("start_elem\n")
+            print(f"Employeer {i}) {elem['employer']}")
+            # input("\nend_elem")
+
+            employeer_id = ['employer']['id']
+            name = elem['employer']['name']
+            url = elem['employer']['alternate_url']
+            vacancies_url = elem['employer']['vacancies_url']
+
+            # salary': {'from': 100000, 'to': 150000, 'currency': 'RUR', 'gross': False},
+            if elem['salary']:
+                salary = elem['salary']['from']
+            else:
+                salary = None
+
+            region = elem['area']['name']
+
+            requirements = ''
+            if elem['professional_roles']:
+                requirements = f"Специальность: {', '.join([role['name'] for role in elem['professional_roles']])}. "
+            if elem['snippet']:
+                s = str(elem['snippet']['requirement'])
+                s = s.replace('<highlighttext>', '').replace('</highlighttext>', '')
+                requirements += s
+
+            v = Employeer(name, url, salary, region, requirements)
+            emplorer_list.append(v)
+
+        return emplorer_list
 
     @classmethod
     def check_parameters_to_request(cls, parameters: dict) -> dict:
