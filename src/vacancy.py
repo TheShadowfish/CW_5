@@ -232,16 +232,13 @@ class Employeer:
     """
         Класс для работы с компаниями (работодателями).
         Атрибуты:
-        - название вакансии
-        - ссылка на вакансию
-        - зарплата
-        - регион/город
-        - краткое описание или требования
+        - id работодателя
+        - название работодателя
+        - ссылка на страницу работодателя на сайте hh
+        - ссылка на вакансии
 
         Класс валидирует данные, которыми инициализируются его атрибуты.
-        Способами валидации данных может быть проверка, указана или нет зарплата.
-        В этом случае выставлять значение зарплаты 0 или «Зарплата не указана»
-        в зависимости от структуры класса.
+
 
         """
 
@@ -331,13 +328,13 @@ class Employeer:
         return f"Вакансия: {delimiter}{delimiter.join(repr_list)}"
 
     def serialize(self):
-        dict_vacancy = {key: value for (key, value) in self.__dict__.items()}
-        return dict_vacancy
+        dict_employeer = {key: value for (key, value) in self.__dict__.items()}
+        return dict_employeer
 
     @classmethod
-    def deserialize(cls, dict_vacancy):
-        v = cls(*dict_vacancy.values())
-        return v
+    def deserialize(cls, dict_employeer):
+        e = cls(*dict_employeer.values())
+        return e
 
     def is_duplicate(self, other) -> bool:
         """
@@ -348,8 +345,8 @@ class Employeer:
             self.__region = other.__region
             self.__requirements = other.__requirements
         """
-        if not isinstance(other, Vacancy):
-            raise TypeError(f"{type(other)} is not a Vacancy exemplar!")
+        if not isinstance(other, Employeer):
+            raise TypeError(f"{type(other)} is not a Employeer exemplar!")
 
         for s, o in zip(other.__dict__.items(), self.__dict__.items()):
             if s != o:
@@ -359,14 +356,14 @@ class Employeer:
 
     @staticmethod
     def remove_duplicates(employeer_list: list) -> list:
-        different_vacancies = []
-        for v in employeer_list:
-            for v_checked in different_vacancies:
-                if v.is_duplicate(v_checked):
+        different_employeer = []
+        for e in employeer_list:
+            for e_checked in different_employeer:
+                if e.is_duplicate(e_checked):
                     break
             else:
-                different_vacancies.append(v)
-        return different_vacancies
+                different_employeer.append(e)
+        return different_employeer
 
     @staticmethod
     def apply_filters(vacancy_list: list, parameters: dict) -> list:
