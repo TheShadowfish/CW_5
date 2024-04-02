@@ -270,20 +270,14 @@ class HhApi(AbstractApiNoAuth, VacancyConstructor):
         for i, elem in enumerate(vacancy_json, start =1):
             # print("start_elem\n")
             print(f"Employeer {i}) {elem['employer']}")
-            # input("\nend_elem")
+            input("\nend_elem")
 
-            employeer_id = ['employer']['id']
+            employeer_id = elem['employer']['id']
             name = elem['employer']['name']
             url = elem['employer']['alternate_url']
             vacancies_url = elem['employer']['vacancies_url']
 
             # salary': {'from': 100000, 'to': 150000, 'currency': 'RUR', 'gross': False},
-            if elem['salary']:
-                salary = elem['salary']['from']
-            else:
-                salary = None
-
-            region = elem['area']['name']
 
             requirements = ''
             if elem['professional_roles']:
@@ -293,7 +287,7 @@ class HhApi(AbstractApiNoAuth, VacancyConstructor):
                 s = s.replace('<highlighttext>', '').replace('</highlighttext>', '')
                 requirements += s
 
-            v = Employeer(name, url, salary, region, requirements)
+            v = Employeer(employeer_id, name, url, vacancies_url)
             emplorer_list.append(v)
 
         return emplorer_list
