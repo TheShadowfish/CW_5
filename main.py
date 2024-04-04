@@ -1,29 +1,36 @@
 from src.api_interaction import HhApi
 from src.vacancy import Vacancy
 
-from src.connectors import VacancyJsonConnector
-from src.connectors import VacancyCsvConnector
-from src.connectors import VacancyTxtConnector
-from src.connectors import VacancyFileConnector
+from src.connectors import JsonConnector
+from src.connectors import CsvConnector
+from src.connectors import TxtConnector
+from src.connectors import FileConnector
 
 
 def user_interaction():
-    what_to_do = input("Выберите формат файла для сохранения данных: \n"
-                       "TXT (vacancy.txt) (1) \n"
-                       "CSV (vacancy.csv) (2) \n"
-                       "JSON (vacancy.json) (3) (default) \n")
+    # what_to_do = input("Выберите формат файла для сохранения данных: \n"
+    #                    "TXT (vacancy.txt) (1) \n"
+    #                    "CSV (vacancy.csv) (2) \n"
+    #                    "JSON (vacancy.json) (3) \n"
+    #                    "PostgressSQL - работа с базой данных (4) (default) \n")
 
-    if what_to_do == '1':
-        file_connector = VacancyTxtConnector()
-    elif what_to_do == '2':
-        file_connector = VacancyCsvConnector()
-    else:
-        file_connector = VacancyJsonConnector()
+    # if what_to_do == '1':
+    #     file_connector = VacancyTxtConnector()
+    # elif what_to_do == '2':
+    #     file_connector = VacancyCsvConnector()
+    # elif what_to_do == '3':
+    #     file_connector = VacancyJsonConnector()1
+    # else:
+    #     file_connector = VacancySQLConnector()
 
-    what_to_do = input(" Сделать запрос с HH.ru по вакансиям (1) \n"
+    # надоело файл выбирать
+    file_connector = JsonConnector()
+
+
+
+    what_to_do = input(" Сделать запрос с HH.ru по вакансиям + работодатели (1) \n"
                        " Загрузить вакансии из файла (2) \n"
-                       " Загрузить из файла и отфильтровать (3) \n"
-                       " Получить запрос по работодателям + вакансиям (4) \n")
+                       " Загрузить из файла и отфильтровать (3) \n")
 
     # vacancy_list = []
     # json_connector = VacancyJsonConnector()
@@ -34,15 +41,12 @@ def user_interaction():
 
     if what_to_do == '1':
         vacancy_list = get_request_info(user_input(True), 'HeadHunter')
+        employees_list = get_request_info_employees(user_input(True), 'HeadHunter')
     elif what_to_do == '2':
         vacancy_list = open_file(file_connector)
     elif what_to_do == '3':
         vacancy_list = open_file(file_connector)
         vacancy_list = Vacancy.apply_filters(vacancy_list, user_input(False))
-    elif what_to_do == '4':
-        vacancy_list = get_request_info(user_input(True), 'HeadHunter')
-        employees_list = get_request_info_employees(user_input(True), 'HeadHunter')
-
     else:
         exit(0)
     print("        В А К А Н С И И       ")
@@ -278,12 +282,12 @@ def verify_list(vac_numbers: str, list_length: int) -> list[int] | None:
         return None
 
 
-def open_file(connector: VacancyFileConnector) -> list[Vacancy]:
+def open_file(connector: FileConnector) -> list[Vacancy]:
     v_list_read = connector.read_from_file()
     return v_list_read
 
 
-def save_to_file(vacancy_list, connector: VacancyFileConnector, rewrite: bool = True):
+def save_to_file(vacancy_list, connector: FileConnector, rewrite: bool = True):
     if rewrite:
         connector.write_to_file(vacancy_list)
     else:

@@ -15,15 +15,26 @@ class Vacancy:
 
     """
 
-    __slots__ = ('__name', '__url', '__salary', '__region', '__requirements')
+    __slots__ = ('__name', '__url', '__salary', '__region', '__requirements', '__employeer_id')
 
-    def __init__(self, name: str, url: str, salary: str, region: str, requirements: str):
-        valid_data = self.validation(name=name, url=url, salary=salary, region=region, requirements=requirements)
+    def __init__(self, name: str, url: str, salary: str, region: str, requirements: str, employeer_id: str):
+        valid_data = self.validation(name=name, url=url, salary=salary,
+                                     region=region, requirements=requirements,
+                                     employeer_id = employeer_id)
         self.__name = valid_data['name']
         self.__url = valid_data['url']
         self.__salary = valid_data['salary']
+
+        # self.__salary_from = valid_data['salary_from']
+        # self.__salary_to = valid_data['salary_to']
+
+
         self.__region = valid_data['region']
         self.__requirements = valid_data['requirements']
+
+        self.__employeer_id = valid_data['employeer_id']
+
+        # employer_id  string  Идентификатор   работодателя.Можно   указать    несколько    значений
 
     @property
     def name(self):
@@ -65,6 +76,13 @@ class Vacancy:
             kwargs['region'] = none_text
         if kwargs['requirements'] is None:
             kwargs['requirements'] = none_text
+
+        if not isinstance(kwargs['employeer_id'], int):
+            raise ValueError('Идентификатор работодателя должен быть числом')
+        else:
+            kwargs['employeer_id'] = int(kwargs['employeer_id'])
+
+
         return kwargs
 
     @property
@@ -79,6 +97,7 @@ class Vacancy:
         _Vacancy__salary: 100500999
         _Vacancy__region: Москва
         _Vacancy__requirements: Необходимо умение GNUть антилоп и гладить манула. Опыт по взаимодействию с python'ом.
+        __Vacancy__employeer_id: 100500999
         PS: Даже если так в коде делать нельзя, мне об этом не говорили.
         """
         artifical__dict = {}
@@ -87,6 +106,7 @@ class Vacancy:
         artifical__dict['_Vacancy' + str(self.__slots__[2])] = self.__salary
         artifical__dict['_Vacancy' + str(self.__slots__[3])] = self.__region
         artifical__dict['_Vacancy' + str(self.__slots__[4])] = self.__requirements
+        artifical__dict['_Vacancy' + str(self.__slots__[5])] = self.__employeer_id
 
         # Чтобы избежать ошибок, положим грабельки сразу.
         assert len(artifical__dict) == len(self.__slots__)
@@ -271,7 +291,6 @@ class Employeer:
     @property
     def vacancies(self):
         return self.__vacancies_url
-
 
     @staticmethod
     def validation(**kwargs) -> dict:

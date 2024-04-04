@@ -232,7 +232,9 @@ class HhApi(AbstractApiNoAuth, VacancyConstructor):
                 s = s.replace('<highlighttext>', '').replace('</highlighttext>', '')
                 requirements += s
 
-            v = Vacancy(name, url, salary, region, requirements)
+            employeer_id = elem['employer']['id']
+
+            v = Vacancy(name, url, salary, region, requirements, employeer_id)
             vacancy_list.append(v)
 
         return vacancy_list
@@ -269,8 +271,8 @@ class HhApi(AbstractApiNoAuth, VacancyConstructor):
 
         for i, elem in enumerate(vacancy_json, start =1):
             # print("start_elem\n")
-            print(f"Employeer {i}) {elem['employer']}")
-            input("\nend_elem")
+            # print(f"Employeer {i}) {elem['employer']}")
+            # input("\nend_elem")
 
             employeer_id = elem['employer']['id']
             name = elem['employer']['name']
