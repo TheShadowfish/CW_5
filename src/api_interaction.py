@@ -1,6 +1,6 @@
 import requests
 from abc import ABC, abstractmethod
-from src.vacancy import Vacancy, Employeer
+from src.vacancy import Vacancy, Employer
 
 
 class AbstractApiNoAuth(ABC):
@@ -232,14 +232,17 @@ class HhApi(AbstractApiNoAuth, VacancyConstructor):
                 s = s.replace('<highlighttext>', '').replace('</highlighttext>', '')
                 requirements += s
 
-            employeer_id = elem['employer']['id']
+            employer_id = elem['employer']['id']
 
-            v = Vacancy(name, url, salary, region, requirements, employeer_id)
+            # input(f"SEE {employer_id}, type= {type(employer_id)}")
+
+            v = Vacancy(name, url, salary, region, requirements, employer_id)
             vacancy_list.append(v)
 
         return vacancy_list
 
-    def return_employer_list_from_json(vacancy_json: list[dict]) -> list[Employeer]:
+    @staticmethod
+    def return_employer_list_from_json(vacancy_json: list[dict]) -> list[Employer]:
 
         """
         Парсит полученный JSON - файл и возвращает список (list) объектов Vacancy
@@ -289,7 +292,7 @@ class HhApi(AbstractApiNoAuth, VacancyConstructor):
                 s = s.replace('<highlighttext>', '').replace('</highlighttext>', '')
                 requirements += s
 
-            v = Employeer(employeer_id, name, url, vacancies_url)
+            v = Employer(employeer_id, name, url, vacancies_url)
             emplorer_list.append(v)
 
         return emplorer_list

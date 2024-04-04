@@ -1,32 +1,32 @@
 from src.api_interaction import HhApi
-from src.vacancy import Vacancy
+from src.vacancy import Vacancy, Employer
 
-from src.connectors import JsonConnector
-from src.connectors import CsvConnector
-from src.connectors import TxtConnector
-from src.connectors import FileConnector
+# from src.connectors import JsonConnector
+# from src.connectors import CsvConnector
+# from src.connectors import TxtConnector
+from src.connectors import JsonConnector, CsvConnector, TxtConnector, UniversalFileConnector
 
 
 def user_interaction():
-    # what_to_do = input("Выберите формат файла для сохранения данных: \n"
-    #                    "TXT (vacancy.txt) (1) \n"
-    #                    "CSV (vacancy.csv) (2) \n"
-    #                    "JSON (vacancy.json) (3) \n"
-    #                    "PostgressSQL - работа с базой данных (4) (default) \n")
+    what_to_do = input("Выберите формат файла для сохранения данных: \n"
+                       "TXT (vacancy.txt) (1) \n"
+                       "CSV (vacancy.csv) (2) \n"
+                       "JSON (vacancy.json) (3) \n"
+                       "PostgreSQL - работа с базой данных (4) (default) \n")
 
-    # if what_to_do == '1':
-    #     file_connector = VacancyTxtConnector()
-    # elif what_to_do == '2':
-    #     file_connector = VacancyCsvConnector()
-    # elif what_to_do == '3':
-    #     file_connector = VacancyJsonConnector()1
-    # else:
-    #     file_connector = VacancySQLConnector()
+    if what_to_do == '1':
+        file_connector = TxtConnector()
+    elif what_to_do == '2':
+        file_connector = CsvConnector()
+    elif what_to_do == '3':
+        file_connector = JsonConnector()
+    elif what_to_do == '4':
+        raise NotImplementedError("ПРЯМ СРАЗУ? НЕТ.")
+    else:
+        file_connector = JsonConnector()
 
     # надоело файл выбирать
-    file_connector = JsonConnector()
-
-
+    # file_connector = JsonConnector()
 
     what_to_do = input(" Сделать запрос с HH.ru по вакансиям + работодатели (1) \n"
                        " Загрузить вакансии из файла (2) \n"
@@ -37,15 +37,17 @@ def user_interaction():
     # csv_connector = VacancyCsvConnector()
     # txt_connector = VacancyTxtConnector()
 
-    employees_list = []
+    # employees_list = []
 
     if what_to_do == '1':
         vacancy_list = get_request_info(user_input(True), 'HeadHunter')
         employees_list = get_request_info_employees(user_input(True), 'HeadHunter')
     elif what_to_do == '2':
         vacancy_list = open_file(file_connector)
+        employees_list = open_file_employers(file_connector)
     elif what_to_do == '3':
         vacancy_list = open_file(file_connector)
+        employees_list = open_file_employers(file_connector)
         vacancy_list = Vacancy.apply_filters(vacancy_list, user_input(False))
     else:
         exit(0)
@@ -69,9 +71,9 @@ def user_interaction():
         elif what_to_do == '2':
             vacancy_list = Vacancy.remove_duplicates(vacancy_list)
         elif what_to_do == '3':
-            save_to_file(vacancy_list, file_connector, True)
+            save_to_file(vacancy_list, employees_list, file_connector, True)
         elif what_to_do == '4':
-            save_to_file(vacancy_list, file_connector, False)
+            save_to_file(vacancy_list, employees_list, file_connector, False)
         elif what_to_do == '5':
             vacancy_list = open_file(file_connector)
         elif what_to_do == '6':
@@ -88,7 +90,7 @@ def user_interaction():
         elif what_to_do == '7':
             exit(0)
         elif what_to_do == '8':
-            save_to_file(vacancy_list, file_connector, True)
+            save_to_file(vacancy_list, employees_list, file_connector, True)
             exit(0)
         else:
             pass
@@ -184,14 +186,14 @@ def get_request_info(parameters_input, api_type: str = 'HeadHunter') -> list[Vac
             return vacancy_list
             # [print(v) for v in vacancy_list]
 
-def get_request_info_employees(parameters_input, api_type: str = 'HeadHunter') -> list[Vacancy]:
+
+def get_request_info_employees(parameters_input, api_type: str = 'HeadHunter') -> list[Employer]:
     """
     Проверка параметров ввода от пользователя, создание экземпляра HhApi, передача параметров в HhApi,
     возврат результатов в списке
     """
     # print(salary)
-    get_employeers: bool = True
-
+    # get_employers: bool = True
 
     if api_type not in parameters_input['platforms']:
         raise NotImplementedError(f"С платформой {api_type} взаимодействие пока не реализовано")
@@ -204,7 +206,7 @@ def get_request_info_employees(parameters_input, api_type: str = 'HeadHunter') -
 
         hh_api = HhApi(**parameters)
 
-        print(f"Get employeers info from hh.ru... ({parameters})")
+        print(f"Get employers info from hh.ru... ({parameters})")
         res = hh_api.get_vacancies()
         print("Done!")
 
@@ -226,21 +228,20 @@ def get_request_info_employees(parameters_input, api_type: str = 'HeadHunter') -
                       f"from {hh_api.pages}: {round((hh_api.page + 1) * 100 / hh_api.pages)} %")
 
                 # v_next_page = HhApi.return_vacancy_list_from_json(page_request)
-                # if get_employeers:
+                # if get_employees:
 
                 e_next_page = HhApi.return_employer_list_from_json(page_request)
 
-
-                    # get_employeers = False
+                # get_employers = False
 
                 # vacancy_list.extend(v_next_page)
                 employer_list.extend(e_next_page)
 
             else:
-                print("see...employer_list")
-                for e in employer_list:
-                    print(e)
-                input("see...employer_list")
+                # print("see...employer_list")
+                # for e in employer_list:
+                #     print(e)
+                # input("see...employer_list")
 
                 return employer_list
         else:
@@ -248,11 +249,10 @@ def get_request_info_employees(parameters_input, api_type: str = 'HeadHunter') -
             # vacancy_list = HhApi.return_vacancy_list_from_json(res)
             employer_list = HhApi.return_employer_list_from_json(res)
 
-            print("see...employer_list")
-            for e in employer_list:
-                print(e)
-            input("see...employer_list")
-
+            # print("see...employer_list")
+            # for e in employer_list:
+            #     print(e)
+            # input("see...employer_list")
 
             return employer_list
             # [print(v) for v in vacancy_list]
@@ -282,16 +282,21 @@ def verify_list(vac_numbers: str, list_length: int) -> list[int] | None:
         return None
 
 
-def open_file(connector: FileConnector) -> list[Vacancy]:
+def open_file(connector: UniversalFileConnector) -> list[Vacancy]:
     v_list_read = connector.read_from_file()
     return v_list_read
 
 
-def save_to_file(vacancy_list, connector: FileConnector, rewrite: bool = True):
+def open_file_employers(connector: UniversalFileConnector) -> list[Employer]:
+    e_list_read = connector.read_employers_from_file()
+    return e_list_read
+
+
+def save_to_file(vacancy_list, employer_list, connector: UniversalFileConnector, rewrite: bool = True):
     if rewrite:
-        connector.write_to_file(vacancy_list)
+        connector.write_to_file(vacancy_list, employer_list)
     else:
-        connector.append_to_file(vacancy_list)
+        connector.append_to_file(vacancy_list, employer_list)
 
 
 # начало программы
