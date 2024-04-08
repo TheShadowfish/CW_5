@@ -1,5 +1,7 @@
 from src.api_interaction import HhApi
 from src.vacancy import Vacancy, Employer
+import requests
+
 
 # from src.connectors import JsonConnector
 # from src.connectors import CsvConnector
@@ -63,13 +65,15 @@ def user_interaction():
                            " Пере-сохранить в файл (3) \n Добавить в файл (4)\n"
                            " Загрузить вакансии из файла (5) \n"
                            " Удалить конкретную вакансию (вакансии) из списка (6) \n"
-                           " Выход БЕЗ СОХРАНЕНИЯ (7) \n"
-                           " СОХРАНИТЬ результаты и выйти (8) \n")
+                           " Запрос информации о вакансиях работодателя из списка (7)"
+                           " Выход БЕЗ СОХРАНЕНИЯ (8) \n"
+                           " СОХРАНИТЬ результаты и выйти (9) \n")
 
         if what_to_do == '1':
             vacancy_list = Vacancy.apply_filters(vacancy_list, user_input(False))
         elif what_to_do == '2':
             vacancy_list = Vacancy.remove_duplicates(vacancy_list)
+            employees_list = Employer.remove_duplicates(employees_list)
         elif what_to_do == '3':
             save_to_file(vacancy_list, employees_list, file_connector, True)
         elif what_to_do == '4':
@@ -88,14 +92,40 @@ def user_interaction():
                     vacancy_list = [v for num, v in enumerate(vacancy_list, start=1) if num not in v_list]
 
         elif what_to_do == '7':
-            exit(0)
+            e_list = verify_list(input("Номер работодателей, вакансии которых вы хотите получить"), len(employees_list))
+            print(e_list)
+            if e_list:
+                e_print = [employer for number, employer in enumerate(employees_list, start=1) if number in e_list]
+                print("Информация по вакансиям: ")
+                e_info = []
+                for e in e_print:
+                    input(f"ID= {e.id}, URL={e.url}")
+                    input(f"\n text= {HhApi.employer_get_vacancies(e.id, e.url)}")
+
+                    # print(f"{e.url} :  + {HhApi.employer_text(e.url)}")
+
+                    e_info.extend(HhApi.employer_get_vacancies(e.id, e.url))
+
+                print("Информация по вакансиям: ")
+                [print(f"{e_see[0]}) \n => {e_see[1]}") for e_see in zip(e_print, e_info)]
+                # employer_get_info(employe)
+
+                input("Ожидание реакции...")
+
+
         elif what_to_do == '8':
+            exit(0)
+        elif what_to_do == '9':
             save_to_file(vacancy_list, employees_list, file_connector, True)
             exit(0)
         else:
             pass
 
+        print("        В А К А Н С И И       ")
         [print(f"{i}) {v}") for i, v in enumerate(vacancy_list, start=1)]
+
+        print("        Р А Б О Т О Д А Т Е Л И        ")
+        [print(f"{i}) {v}") for i, v in enumerate(employees_list, start=1)]
 
 
 def user_input(default: bool = False) -> dict[str, str | int | list[str]]:
@@ -108,7 +138,7 @@ def user_input(default: bool = False) -> dict[str, str | int | list[str]]:
                   'top_n': 10,
                   'filter_words': ['Python', 'backend', 'программист'],
                   'salary_range': '0 - 300000',
-                  'per_page': 100
+                  'per_page': 1003
                   }
 
     if not default:

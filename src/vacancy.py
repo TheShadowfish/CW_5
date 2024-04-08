@@ -15,12 +15,13 @@ class Vacancy:
 
     """
 
-    __slots__ = ('__name', '__url', '__salary', '__region', '__requirements', '__employer_id')
+    __slots__ = ('__name', '__url', '__salary', '__region', '__requirements', '__employer_id', '__region_id')
 
-    def __init__(self, name: str, url: str, salary: str, region: str, requirements: str, employer_id: str):
+    def __init__(self, name: str, url: str, salary: str, region: str, requirements: str,
+                 employer_id: str, region_id: str):
         valid_data = self.validation(name=name, url=url, salary=salary,
                                      region=region, requirements=requirements,
-                                     employer_id=employer_id)
+                                     employer_id=employer_id, region_id=region_id)
         self.__name = valid_data['name']
         self.__url = valid_data['url']
         self.__salary = valid_data['salary']
@@ -32,6 +33,8 @@ class Vacancy:
         self.__requirements = valid_data['requirements']
 
         self.__employer_id = valid_data['employer_id']
+
+        self.__region_id = valid_data['region_id']
 
         # employer_id  string  Идентификатор   работодателя.Можно   указать    несколько    значений
 
@@ -54,6 +57,14 @@ class Vacancy:
     @property
     def requirements(self):
         return self.__requirements
+
+    @property
+    def reqion_id(self):
+        return self.__region_id
+
+    @property
+    def employer_id(self):
+        return  self.__employer_id
 
     @staticmethod
     def validation(**kwargs) -> dict:
@@ -81,6 +92,8 @@ class Vacancy:
         # else:
         kwargs['employer_id'] = int(kwargs['employer_id'])
 
+        kwargs['region_id'] = int(kwargs['region_id'])
+
         return kwargs
 
     @property
@@ -103,7 +116,8 @@ class Vacancy:
                            '_Vacancy' + str(self.__slots__[2]): self.__salary,
                            '_Vacancy' + str(self.__slots__[3]): self.__region,
                            '_Vacancy' + str(self.__slots__[4]): self.__requirements,
-                           '_Vacancy' + str(self.__slots__[5]): self.__employer_id}
+                           '_Vacancy' + str(self.__slots__[5]): self.__employer_id,
+                           '_Vacancy' + str(self.__slots__[6]): self.__region_id}
 
         # Чтобы избежать ошибок, положим грабельки сразу.
         assert len(artificial_dict) == len(self.__slots__)
@@ -374,9 +388,13 @@ class Employer:
         for e in employer_list:
             for e_checked in different_employer:
                 if e.is_duplicate(e_checked):
+                    # input(f"Дубликат: {e_checked} ||| {e}")
                     break
             else:
                 different_employer.append(e)
+
+        # print(f"Проверка, было: {len(employer_list)}, стало: {len(different_employer)}")
+
         return different_employer
 
     @staticmethod
@@ -420,6 +438,9 @@ class Employer:
         #         pass
         #
         # return (sorted(filtered_vacancy_list, reverse=True))[0:parameters['top_n']]
+    # def employer_all_info(self):
+
+
 
     """
     Методы для операций сравнения:

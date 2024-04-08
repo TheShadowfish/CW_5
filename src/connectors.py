@@ -70,12 +70,6 @@ class UniversalFileConnector(ABC):
     def write_list_to_file(self, my_list: list, file):
         pass
 
-    # def file_load(self, file) -> list:
-    #     raise NotImplementedError(f"Чтение файлов с расширением {self.file_extension} не реализовано")
-    #
-    # def file_write(self, my_list: list, file):
-    #     raise NotImplementedError(f"Запись файлов с расширением {self.file_extension} не реализована")
-
     def read_employers_from_file(self) -> list[Employer]:
         """
         Загружает информацию файла employers в папке data(по умолчанию)

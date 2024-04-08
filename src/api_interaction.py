@@ -57,6 +57,7 @@ class HhApi(AbstractApiNoAuth, VacancyConstructor):
         # sub_url = 'vacancies'
 
         res = requests.get(self.__url, params=self.__parameters)
+        input(f"Seee/// {self.__parameters}")
         if res.status_code != 200:
             raise Exception(f"Request code= {res.status_code}, request='{self.__url}', params={self.__parameters}")
 
@@ -224,6 +225,8 @@ class HhApi(AbstractApiNoAuth, VacancyConstructor):
 
             region = elem['area']['name']
 
+            region_id = elem['area']['id']
+
             requirements = ''
             if elem['professional_roles']:
                 requirements = f"Специальность: {', '.join([role['name'] for role in elem['professional_roles']])}. "
@@ -236,7 +239,7 @@ class HhApi(AbstractApiNoAuth, VacancyConstructor):
 
             # input(f"SEE {employer_id}, type= {type(employer_id)}")
 
-            v = Vacancy(name, url, salary, region, requirements, employer_id)
+            v = Vacancy(name, url, salary, region, requirements, employer_id, region_id)
             vacancy_list.append(v)
 
         return vacancy_list
@@ -280,17 +283,9 @@ class HhApi(AbstractApiNoAuth, VacancyConstructor):
             employeer_id = elem['employer']['id']
             name = elem['employer']['name']
             url = elem['employer']['alternate_url']
-            vacancies_url = elem['employer']['vacancies_url']
-
-            # salary': {'from': 100000, 'to': 150000, 'currency': 'RUR', 'gross': False},
-
-            requirements = ''
-            if elem['professional_roles']:
-                requirements = f"Специальность: {', '.join([role['name'] for role in elem['professional_roles']])}. "
-            if elem['snippet']:
-                s = str(elem['snippet']['requirement'])
-                s = s.replace('<highlighttext>', '').replace('</highlighttext>', '')
-                requirements += s
+            # vacancies_url = elem['employer']['vacancies_url']
+            vacancies_url = ('https://spb.hh.ru/search/vacancy?from=employerPage&employer_id=' +
+                             employeer_id + '&hhtmFrom=employer')
 
             v = Employer(employeer_id, name, url, vacancies_url)
             emplorer_list.append(v)
@@ -333,3 +328,40 @@ class HhApi(AbstractApiNoAuth, VacancyConstructor):
             parameters['only_with_salary'] = True
 
         return parameters
+
+    @staticmethod
+    def employer_get_vacancies(employer_id, url):
+        """
+        Возврат по вакансий по ID работодателя
+        employer_id
+        """
+        params_id = {'employer_id': employer_id}
+
+
+        url_vacancies = 'https://api.hh.ru/vacancies'
+        res = requests.get(url_vacancies, params=params_id)
+
+        if res.status_code != 200:
+            raise Exception(f"Request code= {res.status_code}, request='{url_vacancies}', params={params_id}")
+
+
+        # self.found = res.json()['found']
+        # self.pages = res.json()['pages']
+        # self.page = res.json()['page']
+        # self.per_page = res.json()['per_page']
+
+        # return res.json()['items']
+        print(f"FOUND: {res.json()['found']}, pages: {res.json()['pages']}, per_page {res.json()['per_page']}")
+
+
+
+        return HhApi.return_vacancy_list_from_json(res.json()['items'])
+
+    # @staticmethod
+    # def employer_text(url: str):
+    #
+    #     response = requests.get(url)
+    #
+    #     # Получить текст страницы
+    #     text = response.text
+    #     return text
