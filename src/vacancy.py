@@ -15,15 +15,26 @@ class Vacancy:
 
     """
 
-    __slots__ = ('__name', '__url', '__salary', '__region', '__requirements')
+    __slots__ = ('__name', '__url', '__salary', '__region', '__requirements', '__employeer_id')
 
-    def __init__(self, name: str, url: str, salary: str, region: str, requirements: str):
-        valid_data = self.validation(name=name, url=url, salary=salary, region=region, requirements=requirements)
+    def __init__(self, name: str, url: str, salary: str, region: str, requirements: str, employeer_id: str):
+        valid_data = self.validation(name=name, url=url, salary=salary,
+                                     region=region, requirements=requirements,
+                                     employeer_id = employeer_id)
         self.__name = valid_data['name']
         self.__url = valid_data['url']
         self.__salary = valid_data['salary']
+
+        # self.__salary_from = valid_data['salary_from']
+        # self.__salary_to = valid_data['salary_to']
+
+
         self.__region = valid_data['region']
         self.__requirements = valid_data['requirements']
+
+        self.__employeer_id = valid_data['employeer_id']
+
+        # employer_id  string  Идентификатор   работодателя.Можно   указать    несколько    значений
 
     @property
     def name(self):
@@ -65,6 +76,16 @@ class Vacancy:
             kwargs['region'] = none_text
         if kwargs['requirements'] is None:
             kwargs['requirements'] = none_text
+
+
+        kwargs['employeer_id'] = int(kwargs['employeer_id'])
+
+        # if not isinstance(kwargs['employeer_id'], int):
+        #     raise ValueError('Идентификатор работодателя должен быть числом')
+        # else:
+        #     kwargs['employeer_id'] = int(kwargs['employeer_id'])
+
+
         return kwargs
 
     @property
@@ -79,6 +100,7 @@ class Vacancy:
         _Vacancy__salary: 100500999
         _Vacancy__region: Москва
         _Vacancy__requirements: Необходимо умение GNUть антилоп и гладить манула. Опыт по взаимодействию с python'ом.
+        __Vacancy__employeer_id: 100500999
         PS: Даже если так в коде делать нельзя, мне об этом не говорили.
         """
         artifical__dict = {}
@@ -87,6 +109,7 @@ class Vacancy:
         artifical__dict['_Vacancy' + str(self.__slots__[2])] = self.__salary
         artifical__dict['_Vacancy' + str(self.__slots__[3])] = self.__region
         artifical__dict['_Vacancy' + str(self.__slots__[4])] = self.__requirements
+        artifical__dict['_Vacancy' + str(self.__slots__[5])] = self.__employeer_id
 
         # Чтобы избежать ошибок, положим грабельки сразу.
         assert len(artifical__dict) == len(self.__slots__)
@@ -232,16 +255,13 @@ class Employeer:
     """
         Класс для работы с компаниями (работодателями).
         Атрибуты:
-        - название вакансии
-        - ссылка на вакансию
-        - зарплата
-        - регион/город
-        - краткое описание или требования
+        - id работодателя
+        - название работодателя
+        - ссылка на страницу работодателя на сайте hh
+        - ссылка на вакансии
 
         Класс валидирует данные, которыми инициализируются его атрибуты.
-        Способами валидации данных может быть проверка, указана или нет зарплата.
-        В этом случае выставлять значение зарплаты 0 или «Зарплата не указана»
-        в зависимости от структуры класса.
+
 
         """
 
@@ -274,7 +294,6 @@ class Employeer:
     @property
     def vacancies(self):
         return self.__vacancies_url
-
 
     @staticmethod
     def validation(**kwargs) -> dict:
@@ -331,13 +350,13 @@ class Employeer:
         return f"Вакансия: {delimiter}{delimiter.join(repr_list)}"
 
     def serialize(self):
-        dict_vacancy = {key: value for (key, value) in self.__dict__.items()}
-        return dict_vacancy
+        dict_employeer = {key: value for (key, value) in self.__dict__.items()}
+        return dict_employeer
 
     @classmethod
-    def deserialize(cls, dict_vacancy):
-        v = cls(*dict_vacancy.values())
-        return v
+    def deserialize(cls, dict_employeer):
+        e = cls(*dict_employeer.values())
+        return e
 
     def is_duplicate(self, other) -> bool:
         """
@@ -348,8 +367,8 @@ class Employeer:
             self.__region = other.__region
             self.__requirements = other.__requirements
         """
-        if not isinstance(other, Vacancy):
-            raise TypeError(f"{type(other)} is not a Vacancy exemplar!")
+        if not isinstance(other, Employeer):
+            raise TypeError(f"{type(other)} is not a Employeer exemplar!")
 
         for s, o in zip(other.__dict__.items(), self.__dict__.items()):
             if s != o:
@@ -359,14 +378,14 @@ class Employeer:
 
     @staticmethod
     def remove_duplicates(employeer_list: list) -> list:
-        different_vacancies = []
-        for v in employeer_list:
-            for v_checked in different_vacancies:
-                if v.is_duplicate(v_checked):
+        different_employeer = []
+        for e in employeer_list:
+            for e_checked in different_employeer:
+                if e.is_duplicate(e_checked):
                     break
             else:
-                different_vacancies.append(v)
-        return different_vacancies
+                different_employeer.append(e)
+        return different_employeer
 
     @staticmethod
     def apply_filters(vacancy_list: list, parameters: dict) -> list:
