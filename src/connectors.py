@@ -156,7 +156,7 @@ class JsonConnector(UniversalFileConnector, LoadWrite):
 
     def __init__(self):
         # self.file_extension = 'json'
-        super().__init__(self, 'json')
+        super().__init__('json')
 
     def file_load(self, file) -> list:
         with open(file, "rt") as read_file:

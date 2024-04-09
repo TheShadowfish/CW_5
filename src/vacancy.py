@@ -77,10 +77,13 @@ class Vacancy:
         if kwargs['requirements'] is None:
             kwargs['requirements'] = none_text
 
-        if not isinstance(kwargs['employeer_id'], int):
-            raise ValueError('Идентификатор работодателя должен быть числом')
-        else:
-            kwargs['employeer_id'] = int(kwargs['employeer_id'])
+
+        kwargs['employeer_id'] = int(kwargs['employeer_id'])
+
+        # if not isinstance(kwargs['employeer_id'], int):
+        #     raise ValueError('Идентификатор работодателя должен быть числом')
+        # else:
+        #     kwargs['employeer_id'] = int(kwargs['employeer_id'])
 
 
         return kwargs
