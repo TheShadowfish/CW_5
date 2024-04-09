@@ -88,12 +88,16 @@ def user_interaction():
         elif what_to_do == '7':
             exit(0)
         elif what_to_do == '8':
-            save_to_file(vacancy_list, file_connector, True)
+            save_to_file(vacancy_list, employees_list, file_connector, True)
             exit(0)
         else:
             pass
 
+        print("        В А К А Н С И И       ")
         [print(f"{i}) {v}") for i, v in enumerate(vacancy_list, start=1)]
+
+        print("        Р А Б О Т О Д А Т Е Л И        ")
+        [print(f"{i}) {v}") for i, v in enumerate(employees_list, start=1)]
 
 
 def user_input(default: bool = False) -> dict[str, str | int | list[str]]:
@@ -287,11 +291,11 @@ def open_file(connector: FileConnector) -> list[Vacancy]:
     return v_list_read
 
 
-def save_to_file(vacancy_list, connector: FileConnector, rewrite: bool = True):
+def save_to_file(vacancy_list, employer_list, connector: FileConnector, rewrite: bool = True):
     if rewrite:
-        connector.write_to_file(vacancy_list)
+        connector.write_to_file(vacancy_list, employer_list)
     else:
-        connector.append_to_file(vacancy_list)
+        connector.append_to_file(vacancy_list, employer_list)
 
 
 # начало программы
