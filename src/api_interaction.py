@@ -57,7 +57,7 @@ class HhApi(AbstractApiNoAuth, VacancyConstructor):
         # sub_url = 'vacancies'
 
         res = requests.get(self.__url, params=self.__parameters)
-        input(f"Seee/// {self.__parameters}")
+        # input(f"Seee/// {self.__parameters}")
         if res.status_code != 200:
             raise Exception(f"Request code= {res.status_code}, request='{self.__url}', params={self.__parameters}")
 
@@ -335,7 +335,7 @@ class HhApi(AbstractApiNoAuth, VacancyConstructor):
         Возврат по вакансий по ID работодателя
         employer_id
         """
-        params_id = {'employer_id': employer_id}
+        params_id = {'employer_id': employer_id, 'per_page': 100}
 
 
         url_vacancies = 'https://api.hh.ru/vacancies'

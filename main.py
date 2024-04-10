@@ -65,9 +65,10 @@ def user_interaction():
                            " Пере-сохранить в файл (3) \n Добавить в файл (4)\n"
                            " Загрузить вакансии из файла (5) \n"
                            " Удалить конкретную вакансию (вакансии) из списка (6) \n"
-                           " Запрос информации о вакансиях работодателя из списка (7)"
-                           " Выход БЕЗ СОХРАНЕНИЯ (8) \n"
-                           " СОХРАНИТЬ результаты и выйти (9) \n")
+                           " Запрос информации о вакансиях работодателя из списка (7) \n"
+                           " Вакансии всех работодателей (8) \n"
+                           " Выход БЕЗ СОХРАНЕНИЯ (9) \n"
+                           " СОХРАНИТЬ результаты и выйти (10) \n")
 
         if what_to_do == '1':
             vacancy_list = Vacancy.apply_filters(vacancy_list, user_input(False))
@@ -93,29 +94,69 @@ def user_interaction():
 
         elif what_to_do == '7':
             e_list = verify_list(input("Номер работодателей, вакансии которых вы хотите получить"), len(employees_list))
+
+            # печать номеров работодателей
             print(e_list)
+
+            # e_list = range(0, len(employees_list) - все работодатели
+
+
             if e_list:
                 e_print = [employer for number, employer in enumerate(employees_list, start=1) if number in e_list]
                 print("Информация по вакансиям: ")
                 e_info = []
+
+                choosen_employer_vacancy_list = []
                 for e in e_print:
-                    input(f"ID= {e.id}, URL={e.url}")
-                    input(f"\n text= {HhApi.employer_get_vacancies(e.id, e.url)}")
+                    # input(f"ID= {e.id}, URL={e.url}")
+                    e_info = HhApi.employer_get_vacancies(e.id, e.url)
+                    choosen_employer_vacancy_list.extend(e_info)
+
+                    print("Информация по полученым вакансиям: ")
+                    print(f"Работодатель: {e}, \n Вакансии: \n")
+                    [print(f"{i}){v}") for i, v in enumerate(e_info, start=1)]
+                    input("Ожидание реакции...")
+
+
+                    # input(f"\n text= {HhApi.employer_get_vacancies(e.id, e.url)}")
 
                     # print(f"{e.url} :  + {HhApi.employer_text(e.url)}")
 
-                    e_info.extend(HhApi.employer_get_vacancies(e.id, e.url))
+                    # e_info.extend(HhApi.employer_get_vacancies(e.id, e.url))
 
-                print("Информация по вакансиям: ")
-                [print(f"{e_see[0]}) \n => {e_see[1]}") for e_see in zip(e_print, e_info)]
-                # employer_get_info(employe)
+                # print("Информация по полученым вакансиям: ")
+                # [print(f"{e_see[0]}) \n => {e_see[1]}") for e_see in zip(e_print, e_info)]
+                # # employer_get_info(employe)
 
-                input("Ожидание реакции...")
 
 
         elif what_to_do == '8':
-            exit(0)
+            # все работодатели
+            e_list = range(0, len(employees_list))
+            print(e_list)
+
+
+
+            if e_list:
+                e_print = [employer for number, employer in enumerate(employees_list, start=1) if number in e_list]
+                print("Информация по вакансиям: ")
+                e_info = []
+
+                all_employer_vacancy_list = []
+                for e in employees_list:
+
+                    e_info = HhApi.employer_get_vacancies(e.id, e.url)
+                    all_employer_vacancy_list.extend(e_info)
+
+                    print("Информация по полученым вакансиям: ")
+                    print(f"Работодатель: {e}, \n Вакансии: \n")
+                    [print(f"{i}){v}") for i, v in enumerate(e_info, start=1)]
+                    input("Ожидание реакции...")
+
+
         elif what_to_do == '9':
+            exit(0)
+        elif what_to_do == '10':
             save_to_file(vacancy_list, employees_list, file_connector, True)
             exit(0)
         else:
