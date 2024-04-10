@@ -138,7 +138,7 @@ def user_input(default: bool = False) -> dict[str, str | int | list[str]]:
                   'top_n': 10,
                   'filter_words': ['Python', 'backend', 'программист'],
                   'salary_range': '0 - 300000',
-                  'per_page': 1003
+                  'per_page': 100
                   }
 
     if not default:
