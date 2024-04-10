@@ -98,9 +98,6 @@ def user_interaction():
             # печать номеров работодателей
             print(e_list)
 
-            # e_list = range(0, len(employees_list) - все работодатели
-
-
             if e_list:
                 e_print = [employer for number, employer in enumerate(employees_list, start=1) if number in e_list]
                 print("Информация по вакансиям: ")
@@ -118,24 +115,10 @@ def user_interaction():
                     input("Ожидание реакции...")
 
 
-                    # input(f"\n text= {HhApi.employer_get_vacancies(e.id, e.url)}")
-
-                    # print(f"{e.url} :  + {HhApi.employer_text(e.url)}")
-
-                    # e_info.extend(HhApi.employer_get_vacancies(e.id, e.url))
-
-                # print("Информация по полученым вакансиям: ")
-                # [print(f"{e_see[0]}) \n => {e_see[1]}") for e_see in zip(e_print, e_info)]
-                # # employer_get_info(employe)
-
-
-
         elif what_to_do == '8':
             # все работодатели
             e_list = range(0, len(employees_list))
             print(e_list)
-
-
 
             if e_list:
                 e_print = [employer for number, employer in enumerate(employees_list, start=1) if number in e_list]
@@ -152,6 +135,11 @@ def user_interaction():
                     print(f"Работодатель: {e}, \n Вакансии: \n")
                     [print(f"{i}){v}") for i, v in enumerate(e_info, start=1)]
                     input("Ожидание реакции...")
+
+            [print(f"{i}){v}") for i, v in enumerate(all_employer_vacancy_list, start=1)]
+            vacancy_list.extend(all_employer_vacancy_list)
+
+
 
 
         elif what_to_do == '9':
