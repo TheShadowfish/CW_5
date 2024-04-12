@@ -59,7 +59,7 @@ class Vacancy:
         return self.__requirements
 
     @property
-    def reqion_id(self):
+    def region_id(self):
         return self.__region_id
 
     @property
