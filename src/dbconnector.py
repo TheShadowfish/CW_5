@@ -65,12 +65,15 @@ class DBManager(AbsoluteFileConnector, LoadWrite):
     """
 
     def __init__(self):
-        super().__init__('PostreSQL')
+        self.file_extension = 'PostgreSQL'
+        self.__db_name = 'headhunter_cw5'
+        self.__tables = ('regions', 'employers', 'vacancies')
         # параметры user и password нужно конечно хранить отдельно
         # вообще для тестирования программы: user=postgres, password=12345
+        self.__db_name = "headhunter_cw5"
         self.conn_params = {
             "host": "localhost",
-            "database": "headhunter_cw5",
+            "database": self.__db_name,
             "user": config('DB_POSTRESQL_USER'),
             "password": config('DB_POSTRESQL_PASSWORD')}
 
@@ -93,9 +96,9 @@ class DBManager(AbsoluteFileConnector, LoadWrite):
             if input('Создать БД автоматически? Без этого дальнейшая работа будет невозможна. Y/N') != 'Y':
                 exit(1)
             else:
-                print('create headhunter_cw5...')
+                print(f'create {self.__db_name}...')
                 self.create_headhunter_cw5_db()
-                print('generate tables...')
+                print(f'generate tables {self.__tables}...')
                 self.generate_bd_script()
         else:
             print(f'База данных {self.conn_params} уже существует. Продолжаем работу.')
@@ -112,10 +115,10 @@ class DBManager(AbsoluteFileConnector, LoadWrite):
         con.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)  # <-- ADD THIS LINE
         cur = con.cursor()
 
-        cur.execute('CREATE DATABASE headhunter_cw5;')
+        cur.execute(f'CREATE DATABASE {self.__db_name};')
         cur.close()
         con.close()
-        print("headhunter_cw5 создана! ")
+        print(f"{self.__db_name} создана! ")
 
     def generate_bd_script(self):
         """
@@ -186,56 +189,54 @@ class DBManager(AbsoluteFileConnector, LoadWrite):
         id - int, связь с employer_id (Vacancy) - один ко многим
         name, url, vacancies_url - string
         """
-        # работодатели
-        create_region = "CREATE TABLE regions (region_id int UNIQUE PRIMARY KEY, region_name varchar(50) NOT NULL);"
-
-        create_employers = "CREATE TABLE employers (\
-                                     employer_id int UNIQUE PRIMARY KEY,\
-                                     name varchar(200) NOT NULL,\
-                                     url varchar(200) NOT NULL,\
-                                     vacancies_url varchar(250) NOT NULL\
-                                     );"
-
-        # надо бы id вакансии получать с hh, лучше, чем самому автогенерировать.
-        create_vacancy = "CREATE TABLE vacancies (\
-                                     vacancy_id int UNIQUE PRIMARY KEY,\
-                                     name varchar(200) NOT NULL,\
-                                     url varchar(200) NOT NULL,\
-                                     salary int,\
-                                     region_id int REFERENCES regions(region_id),\
-                                     employer_id int REFERENCES employers(employer_id),\
-                                     requirements text\
-                                     );"
-        int_from_str = lambda x: int(x) if x.isdigit() else x
+        # # работодатели
+        # create_region = "CREATE TABLE regions (region_id int UNIQUE PRIMARY KEY, region_name varchar(50) NOT NULL);"
+        #
+        # create_employers = "CREATE TABLE employers (\
+        #                              employer_id int UNIQUE PRIMARY KEY,\
+        #                              name varchar(200) NOT NULL,\
+        #                              url varchar(200) NOT NULL,\
+        #                              vacancies_url varchar(250) NOT NULL\
+        #                              );"
+        #
+        # # надо бы id вакансии получать с hh, лучше, чем самому автогенерировать.
+        # create_vacancy = "CREATE TABLE vacancies (\
+        #                              vacancy_id int UNIQUE PRIMARY KEY,\
+        #                              name varchar(200) NOT NULL,\
+        #                              url varchar(200) NOT NULL,\
+        #                              salary int,\
+        #                              region_id int REFERENCES regions(region_id),\
+        #                              employer_id int REFERENCES employers(employer_id),\
+        #                              requirements text\
+        #                              );"
+        # int_from_str = lambda x: int(x) if x.isdigit() else x
         # список кортежей для cur.executemany
-        tuple_string = [tuple([int_from_str(v) for v in line.values()]) for line in cvs_data]
-
+        # tuple_string = [tuple([int_from_str(v) for v in line.values()]) for line in cvs_data]
 
         # регионы
-        regions = [{'region_id': v.region_id, 'region_name': v.region}  for v in vacancy_list]
-        #     Vacancy - вакансии
-        # name, url  -  string
-        # salary - int
-        #
-        # region - string - список регионов, данные повторяются, характеризуется region_id (int)
-        # requirements - string (длинный текст)
-        #
-        # employer_id - int, связь с работодателем, многие к одному
-        # region_id - связь со списком регионов, многие ко многим
-        # # вакансии
+        regions = [{'region_id': int(v.region_id), 'region_name': v.region} for v in vacancy_list]
 
+        # работодатели
+        employers = [{'employer_id': int(e.id), 'name': e.name, 'url': e.url,
+                      'vacancies_url': e.vacancies} for e in employer_list]
 
-        # количество параметров VALUES в INSERT INTO, т.е. (%s, %s, ... %s)
-        string_s = ', '.join(['%s' for i in range(len(cvs_data[0]))])
+        # вакансии
+        vacancies = [{'vacancy_id': int(v.vacancy_id), 'name': v.name, 'url': v.url, 'salary': int(v.salary),
+                      'region_id': int(v.region_id), 'employer_id': int(v.employer_id),
+                      'requirements': v.requirements} for v in vacancy_list]
 
-        # превращает числовые значения в числа, строковые не меняет
-        int_from_str = lambda x: int(x) if x.isdigit() else x
-        # список кортежей для cur.executemany
-        tuple_string = [tuple([int_from_str(v) for v in line.values()]) for line in cvs_data]
+        # в данном случае конечно пишет таблицу в БД. Хотя она тоже файл, вроде как.
+        self.write_list_to_file(regions, 'regions')
+        self.write_list_to_file(employers, 'employers')
+        self.write_list_to_file(vacancies, 'vacancies')
 
-        conn2 = psycopg2.connect(**conn_params)
+    def write_list_to_file(self, my_list: list, file):
+        tuple_string = my_list
+        tablename = file
+        string_s = ', '.join(['%s' for i in range(len(tuple_string[0]))])
+        conn2 = psycopg2.connect(**self.conn_params)
         cur = conn2.cursor()
-        # print(f"INSERT INTO {tablename} VALUES ({string_s}) {tuple_string}")
+        print(f"INSERT INTO {tablename} VALUES ({string_s}) {tuple_string}")
 
         try:
             cur.executemany(f"INSERT INTO {tablename} VALUES ({string_s})", tuple_string)
@@ -259,8 +260,6 @@ class DBManager(AbsoluteFileConnector, LoadWrite):
     #     pass
     #
     # @abstractmethod
-    # def write_list_to_file(self, my_list: list, file):
-    #     pass
 
     # def read_employers_from_file(self) -> list[Employer]:
     #     """
@@ -275,11 +274,20 @@ class DBManager(AbsoluteFileConnector, LoadWrite):
     #     перезаписывает файл.
     #     """
 
-    def load_list_from_file(self, file) -> list:
+    def read_from_file(self) -> list[Vacancy]:
+        raise NotImplementedError
         pass
 
-    def write_list_to_file(self, my_list: list, file):
+    def load_list_from_file(self, file) -> list:
+        raise NotImplementedError
+        pass
 
+    def read_employers_from_file(self) -> list[Employer]:
+        raise NotImplementedError
+        pass
+
+    def append_to_file(self, vacancy_list: list[Vacancy], employer_list: list[Employer]):
+        raise NotImplementedError
         pass
 
     def script_in_main_py(self, write_bd: bool):
