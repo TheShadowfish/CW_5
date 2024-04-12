@@ -1,13 +1,51 @@
 import psycopg2
-from psycopg2 import sql
-from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT # <-- ADD THIS LINE
+from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT  # <-- ADD THIS LINE
 
 import os
 import csv
-from src.connectors import LoadWrite, UniversalFileConnector
+from src.connectors import LoadWrite, AbsoluteFileConnector
 from decouple import config
+from abc import ABC, abstractmethod
+from src.vacancy import Vacancy, Employer
 
-class DBManager(UniversalFileConnector, LoadWrite):
+
+class DBManagerNeedToPerform(ABC):
+    @abstractmethod
+    def get_companies_and_vacancies_count(self):
+        """
+        Получает список всех компаний и количество вакансий у каждой компании.
+        """
+        pass
+
+    @abstractmethod
+    def get_all_vacancies(self):
+        """
+        Получает список всех вакансий с указанием названия компании, названия вакансии и зарплаты и ссылки на вакансию.
+        """
+        pass
+
+    @abstractmethod
+    def get_avg_salary(self):
+        """
+        Получает среднюю зарплату по вакансиям.
+        """
+        pass
+
+    @abstractmethod
+    def get_vacancies_with_higher_salary(self):
+        """
+        Получает список всех вакансий, у которых зарплата выше средней по всем вакансиям.
+        """
+
+    @abstractmethod
+    def get_vacancies_with_keyword(self):
+        """
+        Получает список всех вакансий, в названии которых содержатся переданные в метод слова, например python.
+        """
+        pass
+
+
+class DBManager(AbsoluteFileConnector, LoadWrite):
     """
     Имеются уникальные объекты
 
@@ -52,7 +90,7 @@ class DBManager(UniversalFileConnector, LoadWrite):
             conn.close()
         except Exception as e:
             print(f'Исключение {e}. База данных {self.conn_params} и таблицы в ней еще не созданы')
-            if input('Создать БД? Без этого дальнейшая работа невозможна. Y/N') != 'Y':
+            if input('Создать БД автоматически? Без этого дальнейшая работа будет невозможна. Y/N') != 'Y':
                 exit(1)
             else:
                 print('create headhunter_cw5...')
@@ -74,9 +112,6 @@ class DBManager(UniversalFileConnector, LoadWrite):
         con.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)  # <-- ADD THIS LINE
         cur = con.cursor()
 
-        # Use the psycopg2.sql module instead of string concatenation
-        # in order to avoid sql injection attacks.
-        # cur.execute(sql.SQL('CREATE DATABASE {};').format(sql.Identifier('headhunter_cw5')))
         cur.execute('CREATE DATABASE headhunter_cw5;')
         cur.close()
         con.close()
@@ -109,9 +144,9 @@ class DBManager(UniversalFileConnector, LoadWrite):
                                     requirements text\
                                     );"
         print("Подключение...")
-        with psycopg2.connect(** self.conn_params) as conn:
+        with psycopg2.connect(**self.conn_params) as conn:
             with conn.cursor() as cur:
-                    # cur.execute("INSERT INTO mytable VALUES (%s, %s, %s)", (4, name, description))
+                # cur.execute("INSERT INTO mytable VALUES (%s, %s, %s)", (4, name, description))
                 cur.execute(create_region)
                 print("Таблица region создана!")
                 cur.execute(create_employers)
@@ -119,33 +154,105 @@ class DBManager(UniversalFileConnector, LoadWrite):
                 cur.execute(create_vacancy)
                 print("Таблица vacancy создана!")
 
-
-
-
-
     def print_database_table(self, bdname, tablename):
 
         print(f"\n Таблица в базе {bdname}(localhost) {tablename}: \n")
 
-        with psycopg2.connect(** self.conn_params) as conn:
+        with psycopg2.connect(**self.conn_params) as conn:
             with conn.cursor() as cur:
-                    # cur.execute("INSERT INTO mytable VALUES (%s, %s, %s)", (4, name, description))
+                # cur.execute("INSERT INTO mytable VALUES (%s, %s, %s)", (4, name, description))
                 cur.execute(f"SELECT * FROM {tablename}")
                 rows = cur.fetchall()
                 for row in rows:
                     print(row)
         conn.close()
 
+    def write_to_file(self, vacancy_list: list[Vacancy], employer_list: list[Employer]):
+        """
+        Пишет в базу данных PostgreSQL информацию о работодателях и вакансиях.
 
 
+            Vacancy - вакансии
+        name, url  -  string
+        salary - int
 
+        region - string - список регионов, данные повторяются, характеризуется region_id (int)
+        requirements - string (длинный текст)
+
+        employer_id - int, связь с работодателем, многие к одному
+        region_id - связь со списком регионов, многие ко многим
+
+            Employer - работодатель
+        id - int, связь с employer_id (Vacancy) - один ко многим
+        name, url, vacancies_url - string
+        """
+        # работодатели
+        create_region = "CREATE TABLE regions (region_id int UNIQUE PRIMARY KEY, region_name varchar(50) NOT NULL);"
+
+        create_employers = "CREATE TABLE employers (\
+                                     employer_id int UNIQUE PRIMARY KEY,\
+                                     name varchar(200) NOT NULL,\
+                                     url varchar(200) NOT NULL,\
+                                     vacancies_url varchar(250) NOT NULL\
+                                     );"
+
+        # надо бы id вакансии получать с hh, лучше, чем самому автогенерировать.
+        create_vacancy = "CREATE TABLE vacancies (\
+                                     vacancy_id int UNIQUE PRIMARY KEY,\
+                                     name varchar(200) NOT NULL,\
+                                     url varchar(200) NOT NULL,\
+                                     salary int,\
+                                     region_id int REFERENCES regions(region_id),\
+                                     employer_id int REFERENCES employers(employer_id),\
+                                     requirements text\
+                                     );"
+        int_from_str = lambda x: int(x) if x.isdigit() else x
+        # список кортежей для cur.executemany
+        tuple_string = [tuple([int_from_str(v) for v in line.values()]) for line in cvs_data]
+
+
+        # регионы
+        regions = [{'region_id': v.region_id, 'region_name': v.region}  for v in vacancy_list]
+        #     Vacancy - вакансии
+        # name, url  -  string
+        # salary - int
+        #
+        # region - string - список регионов, данные повторяются, характеризуется region_id (int)
+        # requirements - string (длинный текст)
+        #
+        # employer_id - int, связь с работодателем, многие к одному
+        # region_id - связь со списком регионов, многие ко многим
+        # # вакансии
+
+
+        # количество параметров VALUES в INSERT INTO, т.е. (%s, %s, ... %s)
+        string_s = ', '.join(['%s' for i in range(len(cvs_data[0]))])
+
+        # превращает числовые значения в числа, строковые не меняет
+        int_from_str = lambda x: int(x) if x.isdigit() else x
+        # список кортежей для cur.executemany
+        tuple_string = [tuple([int_from_str(v) for v in line.values()]) for line in cvs_data]
+
+        conn2 = psycopg2.connect(**conn_params)
+        cur = conn2.cursor()
+        # print(f"INSERT INTO {tablename} VALUES ({string_s}) {tuple_string}")
+
+        try:
+            cur.executemany(f"INSERT INTO {tablename} VALUES ({string_s})", tuple_string)
+        except Exception as e:
+            print(f'Ошибка: {e}')
+        else:
+            # если запрос без ошибок - заносим в БД
+            conn2.commit()
+        finally:
+            cur.close()
+            conn2.close()
 
     # def read_from_file(self) -> list[Vacancy]:
     #     """
     #     Загружает информацию из файла vacancy в папке data
     #     list[Vacancy] - возвращает список вакансий
     #     """
-
 
     # @abstractmethod
     # def load_list_from_file(self, file) -> list:
@@ -161,12 +268,6 @@ class DBManager(UniversalFileConnector, LoadWrite):
     #     list[Employer] - возвращает список работодателей
     #     """
 
-    # def write_to_file(self, vacancy_list: list[Vacancy], employer_list: list[Employer]):
-    #     """
-    #     Пишет в файл vacancy.json в директории data.
-    #     Добавляет данные в конец файла
-    #     """
-
     # def append_to_file(self, vacancy_list: list[Vacancy], employer_list: list[Employer]):
     #     """
     #     Читает файл vacancy.json в директории data,
@@ -174,13 +275,11 @@ class DBManager(UniversalFileConnector, LoadWrite):
     #     перезаписывает файл.
     #     """
 
-
-
-
     def load_list_from_file(self, file) -> list:
         pass
 
     def write_list_to_file(self, my_list: list, file):
+
         pass
 
     def script_in_main_py(self, write_bd: bool):
@@ -204,8 +303,6 @@ class DBManager(UniversalFileConnector, LoadWrite):
         self.print_database_table("employees_data")
         self.print_database_table("orders_data")
 
-
-
     def read_from_file(self, filename: str = '') -> dict:
         """
         Загружает информацию из файла csv в папке north_data
@@ -220,10 +317,6 @@ class DBManager(UniversalFileConnector, LoadWrite):
             reader = csv.DictReader(my_csv)
             data_csv = list(reader)
         return data_csv
-
-
-
-
 
     def write_to_database(self, tablename, cvs_data: list[dict]):
         conn_params = {
@@ -258,6 +351,3 @@ class DBManager(UniversalFileConnector, LoadWrite):
 
 if __name__ == '__main__':
     dbm = DBManager()
-
-
-
