@@ -236,10 +236,11 @@ class HhApi(AbstractApiNoAuth, VacancyConstructor):
                 requirements += s
 
             employer_id = elem['employer']['id']
+            vacancy_id = elem['id']
 
             # input(f"SEE {employer_id}, type= {type(employer_id)}")
 
-            v = Vacancy(name, url, salary, region, requirements, employer_id, region_id)
+            v = Vacancy(name, url, salary, region, requirements, employer_id, region_id, vacancy_id)
             vacancy_list.append(v)
 
         return vacancy_list

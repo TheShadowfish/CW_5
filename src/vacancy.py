@@ -15,13 +15,14 @@ class Vacancy:
 
     """
 
-    __slots__ = ('__name', '__url', '__salary', '__region', '__requirements', '__employer_id', '__region_id')
+    __slots__ = ('__name', '__url', '__salary', '__region', '__requirements',
+                 '__employer_id', '__region_id', '__vacancy_id')
 
     def __init__(self, name: str, url: str, salary: str, region: str, requirements: str,
-                 employer_id: str, region_id: str):
+                 employer_id: str, region_id: str, vacancy_id: str):
         valid_data = self.validation(name=name, url=url, salary=salary,
                                      region=region, requirements=requirements,
-                                     employer_id=employer_id, region_id=region_id)
+                                     employer_id=employer_id, region_id=region_id, vacancy_id=vacancy_id)
         self.__name = valid_data['name']
         self.__url = valid_data['url']
         self.__salary = valid_data['salary']
@@ -35,6 +36,8 @@ class Vacancy:
         self.__employer_id = valid_data['employer_id']
 
         self.__region_id = valid_data['region_id']
+
+        self.__vacancy_id = valid_data['vacancy_id']
 
         # employer_id  string  Идентификатор   работодателя.Можно   указать    несколько    значений
 
@@ -64,7 +67,11 @@ class Vacancy:
 
     @property
     def employer_id(self):
-        return  self.__employer_id
+        return self.__employer_id
+
+    @property
+    def vacancy_id(self):
+        return self.__vacancy_id
 
     @staticmethod
     def validation(**kwargs) -> dict:
@@ -93,6 +100,7 @@ class Vacancy:
         kwargs['employer_id'] = int(kwargs['employer_id'])
 
         kwargs['region_id'] = int(kwargs['region_id'])
+        kwargs['vacancy_id'] = int(kwargs['vacancy_id'])
 
         return kwargs
 
@@ -117,7 +125,8 @@ class Vacancy:
                            '_Vacancy' + str(self.__slots__[3]): self.__region,
                            '_Vacancy' + str(self.__slots__[4]): self.__requirements,
                            '_Vacancy' + str(self.__slots__[5]): self.__employer_id,
-                           '_Vacancy' + str(self.__slots__[6]): self.__region_id}
+                           '_Vacancy' + str(self.__slots__[6]): self.__region_id,
+                           '_Vacancy' + str(self.__slots__[7]): self.__vacancy_id}
 
         # Чтобы избежать ошибок, положим грабельки сразу.
         assert len(artificial_dict) == len(self.__slots__)
@@ -336,10 +345,10 @@ class Employer:
         _Vacancy__requirements: Необходимо умение GNUть антилоп и гладить манула. Опыт по взаимодействию с python'ом.
         PS: Даже если так в коде делать нельзя, мне об этом не говорили.
         """
-        artificial_dict = {'_Employeer' + str(self.__slots__[0]): self.__id,
-                           '_Employeer' + str(self.__slots__[1]): self.__name,
-                           '_Employeer' + str(self.__slots__[2]): self.__url,
-                           '_Employeer' + str(self.__slots__[3]): self.__vacancies_url}
+        artificial_dict = {'_Employer' + str(self.__slots__[0]): self.__id,
+                           '_Employer' + str(self.__slots__[1]): self.__name,
+                           '_Employer' + str(self.__slots__[2]): self.__url,
+                           '_Employer' + str(self.__slots__[3]): self.__vacancies_url}
 
         # Чтобы избежать ошибок, положим грабельки сразу.
         assert len(artificial_dict) == len(self.__slots__)
