@@ -7,6 +7,7 @@ import requests
 # from src.connectors import CsvConnector
 # from src.connectors import TxtConnector
 from src.connectors import JsonConnector, CsvConnector, TxtConnector, UniversalFileConnector
+from src.dbconnector import DBManager
 
 
 def user_interaction():
@@ -23,9 +24,10 @@ def user_interaction():
     elif what_to_do == '3':
         file_connector = JsonConnector()
     elif what_to_do == '4':
-        raise NotImplementedError("ПРЯМ СРАЗУ? НЕТ.")
+        file_connector = DBManager()
+        # raise NotImplementedError("ПРЯМ СРАЗУ? НЕТ.")
     else:
-        file_connector = JsonConnector()
+        file_connector = DBManager()
 
     # надоело файл выбирать
     # file_connector = JsonConnector()
@@ -112,7 +114,7 @@ def user_interaction():
                     print("Информация по полученым вакансиям: ")
                     print(f"Работодатель: {e}, \n Вакансии: \n")
                     [print(f"{i}){v}") for i, v in enumerate(e_info, start=1)]
-                    input("Ожидание реакции...")
+                    # input("Ожидание реакции...")
 
 
         elif what_to_do == '8':
@@ -134,7 +136,7 @@ def user_interaction():
                     print("Информация по полученым вакансиям: ")
                     print(f"Работодатель: {e}, \n Вакансии: \n")
                     [print(f"{i}){v}") for i, v in enumerate(e_info, start=1)]
-                    input("Ожидание реакции...")
+                    # input("Ожидание реакции...")
 
             [print(f"{i}){v}") for i, v in enumerate(all_employer_vacancy_list, start=1)]
             vacancy_list.extend(all_employer_vacancy_list)
