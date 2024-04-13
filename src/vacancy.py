@@ -153,19 +153,19 @@ class Vacancy:
 
     def is_duplicate(self, other) -> bool:
         """
-        сравнить, совпадают ли вакансии полностью
-            self.__name = other.__name
-            self.__url = other.__url
-            self.__salary = other.__salary
-            self.__region = other.__region
-            self.__requirements = other.__requirements
+        сравнить, совпадают ли ID вакансии
+        Ни за что не поверить, но описание вакансии отдается c Hh фрагментарно и зависит от запроса.
+        Ну хоть по ID можно сравнить.
         """
         if not isinstance(other, Vacancy):
             raise TypeError(f"{type(other)} is not a Vacancy exemplar!")
 
-        for s, o in zip(other.__dict__.items(), self.__dict__.items()):
-            if s != o:
-                return False
+        if self.__vacancy_id == other.__vacancy_id:
+            return True
+        #
+        # for s, o in zip(other.__dict__.items(), self.__dict__.items()):
+        #     if s != o:
+        #         return False
         else:
             return True
 
@@ -375,21 +375,15 @@ class Employer:
 
     def is_duplicate(self, other) -> bool:
         """
-        сравнить, совпадают ли вакансии полностью
-            self.__name = other.__name
-            self.__url = other.__url
-            self.__salary = other.__salary
-            self.__region = other.__region
-            self.__requirements = other.__requirements
+        Cравнить, совпадают ли ID работодателя
         """
         if not isinstance(other, Employer):
             raise TypeError(f"{type(other)} is not a Employer exemplar!")
 
-        for s, o in zip(other.__dict__.items(), self.__dict__.items()):
-            if s != o:
-                return False
-        else:
+        if self.__id == other.__id:
             return True
+        else:
+            return False
 
     @staticmethod
     def remove_duplicates(employer_list: list) -> list:
