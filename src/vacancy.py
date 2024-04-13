@@ -160,8 +160,9 @@ class Vacancy:
         if not isinstance(other, Vacancy):
             raise TypeError(f"{type(other)} is not a Vacancy exemplar!")
 
-        if self.__vacancy_id == other.__vacancy_id:
-            return True
+        if self.__vacancy_id != other.__vacancy_id:
+            # print(f"self.__vacancy_id == other.__vacancy_id: {self.__vacancy_id} != {other.__vacancy_id}")
+            return False
         #
         # for s, o in zip(other.__dict__.items(), self.__dict__.items()):
         #     if s != o:
