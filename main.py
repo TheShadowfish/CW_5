@@ -10,6 +10,8 @@ from src.dbconnector import DBManager
 
 
 def user_interaction():
+    work_with_postgress = False
+
     what_to_do = input("Выберите формат файла для сохранения данных: \n"
                        "TXT (vacancy.txt) (1) \n"
                        "CSV (vacancy.csv) (2) \n"
@@ -24,158 +26,180 @@ def user_interaction():
         file_connector = JsonConnector()
     elif what_to_do == '4':
         file_connector = DBManager()
-        # raise NotImplementedError("ПРЯМ СРАЗУ? НЕТ.")
+        work_with_postgress = True
     else:
         file_connector = DBManager()
+        work_with_postgress = True
 
-    # надоело файл выбирать
-    # file_connector = JsonConnector()
+    info_big_dict = get_vacancy_data(file_connector)
 
-    what_to_do = input("\nПолучение готовых данных для PostgreSQL:"
-                       "(Запрос с HH.ru по вакансиям, доп. запросы по работодателям, удаление дубликатов) (0) \n"
-                       "Сделать запрос с HH.ru по вакансиям + работодатели (1) \n"
-                       "Загрузить вакансии из файла (2) \n"
-                       "Загрузить из файла и отфильтровать (3) \n")
-
-    # vacancy_list = []
-    # json_connector = VacancyJsonConnector()
-    # csv_connector = VacancyCsvConnector()
-    # txt_connector = VacancyTxtConnector()
-
-    # employees_list = []
-
-    if what_to_do == '0':
-        vacancy_employers = get_request_info_universal(user_input(True), api_type='HeadHunter')
-        vacancy_list = vacancy_employers[0]
-        employees_list = vacancy_employers[1]
-        employees_list = Employer.remove_duplicates(employees_list)
-
-        all_employer_vacancy_list = []
-
-        len_employers_list = len(employees_list)
-
-        for i, e in enumerate(employees_list, start=1):
-            print(f"Работодатель {i} из {len_employers_list} ({i*100//len_employers_list}%)")
-            e_info = HhApi.employer_get_vacancies(e.id, only_with_salary=True)
-            all_employer_vacancy_list.extend(e_info)
-
-        vacancy_list.extend(all_employer_vacancy_list)
-        vacancy_list = Vacancy.remove_duplicates(vacancy_list)
-
-    elif what_to_do == '1':
-        # vacancy_list = get_request_info(user_input(True), 'HeadHunter')
-        # employees_list = get_request_info_employees(user_input(True), 'HeadHunter')
-        vacancy_employers = get_request_info_universal(user_input(True), api_type='HeadHunter')
-        vacancy_list = vacancy_employers[0]
-        employees_list = vacancy_employers[1]
-
-    elif what_to_do == '2':
-        vacancy_list = open_file(file_connector)
-        employees_list = open_file_employers(file_connector)
-    elif what_to_do == '3':
-        vacancy_list = open_file(file_connector)
-        employees_list = open_file_employers(file_connector)
-        vacancy_list = Vacancy.apply_filters(vacancy_list, user_input(False))
-    else:
-        exit(0)
+    vacancy_list = info_big_dict['vacancy']
+    employees_list = info_big_dict['employees']
     print("        В А К А Н С И И       ")
     [print(f"{i}) {v}") for i, v in enumerate(vacancy_list, start=1)]
 
     print("        Р А Б О Т О Д А Т Е Л И        ")
     [print(f"{i}) {v}") for i, v in enumerate(employees_list, start=1)]
 
-    while True:
+    # what_to_do = input("\nПолучение готовых данных для PostgreSQL:"
+    #                    "(Запрос с HH.ru по вакансиям, доп. запросы по работодателям, удаление дубликатов) (1) \n"
+    #                    "Сделать запрос с HH.ru по вакансиям + работодатели + выбрать параметры поиска (2) \n"
+    #                    "Загрузить вакансии из файла (3) \n"
+    #                    "Загрузить из файла и отфильтровать (4) \n")
+    #
+    # if what_to_do == '1':
+    #     vacancy_employers = get_request_info_universal(user_input(True), api_type='HeadHunter')
+    #     vacancy_list = vacancy_employers[0]
+    #     employees_list = vacancy_employers[1]
+    #     employees_list = Employer.remove_duplicates(employees_list)
+    #
+    #     all_employer_vacancy_list = []
+    #
+    #     len_employers_list = len(employees_list)
+    #
+    #     for i, e in enumerate(employees_list, start=1):
+    #         print(f"Работодатель {i} из {len_employers_list} ({i * 100 // len_employers_list}%)")
+    #         e_info = HhApi.employer_get_vacancies(e.id, only_with_salary=True)
+    #         all_employer_vacancy_list.extend(e_info)
+    #
+    #     vacancy_list.extend(all_employer_vacancy_list)
+    #     vacancy_list = Vacancy.remove_duplicates(vacancy_list)
+    #
+    # elif what_to_do == '2':
+    #     # vacancy_list = get_request_info(user_input(True), 'HeadHunter')
+    #     # employees_list = get_request_info_employees(user_input(True), 'HeadHunter')
+    #     vacancy_employers = get_request_info_universal(user_input(False), api_type='HeadHunter')
+    #     vacancy_list = vacancy_employers[0]
+    #     employees_list = vacancy_employers[1]
+    #
+    # elif what_to_do == '3':
+    #     vacancy_list = open_file(file_connector)
+    #     employees_list = open_file_employers(file_connector)
+    # elif what_to_do == '4':
+    #     vacancy_list = open_file(file_connector)
+    #     employees_list = open_file_employers(file_connector)
+    #     vacancy_list = Vacancy.apply_filters(vacancy_list, user_input(False))
+    # else:
+    #     exit(0)
+    # print("        В А К А Н С И И       ")
+    # [print(f"{i}) {v}") for i, v in enumerate(vacancy_list, start=1)]
+    #
+    # print("        Р А Б О Т О Д А Т Е Л И        ")
+    # [print(f"{i}) {v}") for i, v in enumerate(employees_list, start=1)]
 
-        what_to_do = input(" Отфильтровать (1) \n Удалить дубликаты (2) \n"
-                           " Пере-сохранить в файл (3) \n Добавить в файл (4)\n"
-                           " Загрузить вакансии из файла (5) \n"
-                           " Удалить конкретную вакансию (вакансии) из списка (6) \n"
-                           " Запрос информации о вакансиях работодателя из списка (7) \n"
-                           " Вакансии всех работодателей (8) \n"
-                           " Выход БЕЗ СОХРАНЕНИЯ (9) \n"
-                           " СОХРАНИТЬ результаты и выйти (10) \n")
+    vacancy_list = info_big_dict['vacancy']
+    employees_list = info_big_dict['employees']
 
+    if work_with_postgress:
+        what_to_do = input("Режим работы с классами Vacancy, Employeer (1)\n "
+                           "Режим работы с базой данных (2)\n"
+                           "Выход (3)\n")
         if what_to_do == '1':
-            vacancy_list = Vacancy.apply_filters(vacancy_list, user_input(False))
+            # info_big_dict = work_with_vacancy_class(vacancy_list, employees_list, file_connector)
+            # Поскольку массивы тоже меняются, допустимо просто
+            work_with_vacancy_class(vacancy_list, employees_list, file_connector)
         elif what_to_do == '2':
-            vacancy_list = Vacancy.remove_duplicates(vacancy_list)
-            employees_list = Employer.remove_duplicates(employees_list)
+            work_with_db(vacancy_list, employees_list, file_connector)
         elif what_to_do == '3':
-            save_to_file(vacancy_list, employees_list, file_connector, True)
-        elif what_to_do == '4':
-            save_to_file(vacancy_list, employees_list, file_connector, False)
-        elif what_to_do == '5':
-            vacancy_list = open_file(file_connector)
-        elif what_to_do == '6':
-            v_list = verify_list(input("Номера вакансий, которые вы хотите удалить (введите номера через пробел)"),
-                                 len(vacancy_list))
-            print(v_list)
-            if v_list:
-                v_deleted = [vacancy for number, vacancy in enumerate(vacancy_list, start=1) if number in v_list]
-                print("Будут удалены следующие вакансии: ")
-                [print(f"{v_del[0]}) {v_del[1]}") for v_del in zip(v_list, v_deleted)]
-                if input("Удалить? Y/N") not in ['т', 'T', 'N', 'n']:
-                    vacancy_list = [v for num, v in enumerate(vacancy_list, start=1) if num not in v_list]
+             exit(0)
+    else:
+        # info_big_dict = work_with_vacancy_class(vacancy_list, employees_list, file_connector)
+        # Поскольку массивы тоже меняются, допустимо просто
+        work_with_vacancy_class(vacancy_list, employees_list, file_connector)
 
-        elif what_to_do == '7':
-            e_list = verify_list(input("Номер работодателей, вакансии которых вы хотите получить"), len(employees_list))
+        #
+        #     vacancy_list = info_big_dict['vacancy']
+        #     employees_list = info_big_dict['employees']
+        #
+        #     info_big_dict = get_vacancy_data(file_connector)
+        #     if(input('Режим работы с классами Vacancy, Employeer'))
+        #
+        #
+        #
+        #
+        #
+        # vacancy_list = info_big_dict['vacancy']
+        # employees_list = info_big_dict['employees']
 
-            # печать номеров работодателей
-            print(e_list)
-
-            if e_list:
-                e_print = [employer for number, employer in enumerate(employees_list, start=1) if number in e_list]
-                print("Информация по вакансиям: ")
-                e_info = []
-
-                choosen_employer_vacancy_list = []
-                for e in e_print:
-                    # input(f"ID= {e.id}, URL={e.url}")
-                    e_info = HhApi.employer_get_vacancies(e.id)
-                    choosen_employer_vacancy_list.extend(e_info)
-
-                    print("Информация по полученным вакансиям: ")
-                    print(f"Работодатель: {e}, \n Вакансии: \n")
-                    [print(f"{i}){v}") for i, v in enumerate(e_info, start=1)]
-                    # input("Ожидание реакции...")
-
-        elif what_to_do == '8':
-            # все работодатели
-            # e_list = range(0, len(employees_list))
-            # print(e_list)
-            #
-            # if e_list:
-            #     e_print = [employer for number, employer in enumerate(employees_list, start=1) if number in e_list]
-            #     print("Информация по вакансиям: ")
-            #     e_info = []
-            len_employers_list = len(employees_list)
-            all_employer_vacancy_list = []
-
-            for i, e in enumerate(employees_list, start=1):
-                print(f"Работодатель {i} из {len_employers_list} ({i * 100 // len_employers_list}%)")
-                e_info = HhApi.employer_get_vacancies(e.id, only_with_salary=True)
-                all_employer_vacancy_list.extend(e_info)
-
-                # print("Информация по полученным вакансиям: ")
-                # print(f"Работодатель: {e}, \n Вакансии: \n")
-                # [print(f"{i}){v}") for i, v in enumerate(e_info, start=1)]4
-
-            # [print(f"{i}){v}") for i, v in enumerate(all_employer_vacancy_list, start=1)]
-            vacancy_list.extend(all_employer_vacancy_list)
-
-        elif what_to_do == '9':
-            exit(0)
-        elif what_to_do == '10':
-            save_to_file(vacancy_list, employees_list, file_connector, True)
-            exit(0)
-        else:
-            pass
-
-        print("        В А К А Н С И И       ")
-        [print(f"{i}) {v}") for i, v in enumerate(vacancy_list, start=1)]
-
-        print("        Р А Б О Т О Д А Т Е Л И        ")
-        [print(f"{i}) {v}") for i, v in enumerate(employees_list, start=1)]
+        # print(" Работа со списками Vacancy: ")
+        #
+        # what_to_do = input(" Отфильтровать (1) \n Удалить дубликаты (2) \n"
+        #                    " Пере-сохранить в файл (3) \n Добавить в файл (4)\n"
+        #                    " Загрузить вакансии из файла (5) \n"
+        #                    " Удалить конкретную вакансию (вакансии) из списка (6) \n"
+        #                    " Запрос информации о вакансиях работодателя из списка (7) \n"
+        #                    " Вакансии всех работодателей (8) \n"
+        #                    " Выход БЕЗ СОХРАНЕНИЯ (9) \n"
+        #                    " СОХРАНИТЬ результаты и выйти (10) \n")
+        #
+        # if what_to_do == '1':
+        #     vacancy_list = Vacancy.apply_filters(vacancy_list, user_input(False))
+        # elif what_to_do == '2':
+        #     vacancy_list = Vacancy.remove_duplicates(vacancy_list)
+        #     employees_list = Employer.remove_duplicates(employees_list)
+        # elif what_to_do == '3':
+        #     save_to_file(vacancy_list, employees_list, file_connector, True)
+        # elif what_to_do == '4':
+        #     save_to_file(vacancy_list, employees_list, file_connector, False)
+        # elif what_to_do == '5':
+        #     vacancy_list = open_file(file_connector)
+        # elif what_to_do == '6':
+        #     v_list = verify_list(input("Номера вакансий, которые вы хотите удалить (введите номера через пробел)"),
+        #                          len(vacancy_list))
+        #     print(v_list)
+        #     if v_list:
+        #         v_deleted = [vacancy for number, vacancy in enumerate(vacancy_list, start=1) if number in v_list]
+        #         v_id_str = [str(v.vacancy_id) for number, v in enumerate(vacancy_list, start=1) if number in v_list]
+        #         print("Будут удалены следующие вакансии: ")
+        #         [print(f"{v_del[0]}) {v_del[1]}") for v_del in zip(v_list, v_deleted)]
+        #         if input("Удалить? Y(Enter)/N") in ['Y', '', 'y']:
+        #             vacancy_list = [v for num, v in enumerate(vacancy_list, start=1) if num not in v_list]
+        #             # if file_connector. isinstance(file_connector, DBManager):
+        #             #     if input(f"Из базы данных Postgres их тоже удалить? Y(Enter)/N") in ['Y', '', 'y']:
+        #             #         file_connector.delete_vacancies_by_id(v_id_str)
+        #
+        # elif what_to_do == '7':
+        #     e_list = verify_list(input("Номер работодателей, вакансии которых вы хотите получить"), len(employees_list))
+        #     print(e_list)
+        #
+        #     if e_list:
+        #         e_print = [employer for number, employer in enumerate(employees_list, start=1) if number in e_list]
+        #         print("Информация по вакансиям: ")
+        #         e_info = []
+        #
+        #         chosen_employer_vacancy_list = []
+        #         for e in e_print:
+        #             e_info = HhApi.employer_get_vacancies(e.id)
+        #             chosen_employer_vacancy_list.extend(e_info)
+        #
+        #             print("Информация по полученным вакансиям: ")
+        #             print(f"Работодатель: {e}, \n Вакансии: \n")
+        #             [print(f"{i}){v}") for i, v in enumerate(e_info, start=1)]
+        #
+        # elif what_to_do == '8':
+        #     len_employers_list = len(employees_list)
+        #     all_employer_vacancy_list = []
+        #
+        #     for i, e in enumerate(employees_list, start=1):
+        #         print(f"Работодатель {i} из {len_employers_list} ({i * 100 // len_employers_list}%)")
+        #         e_info = HhApi.employer_get_vacancies(e.id, only_with_salary=True)
+        #         all_employer_vacancy_list.extend(e_info)
+        #
+        #     vacancy_list.extend(all_employer_vacancy_list)
+        #
+        # elif what_to_do == '9':
+        #     exit(0)
+        # elif what_to_do == '10':
+        #     save_to_file(vacancy_list, employees_list, file_connector, True)
+        #     exit(0)
+        # else:
+        #     pass
+        #
+        # print("        В А К А Н С И И       ")
+        # [print(f"{i}) {v}") for i, v in enumerate(vacancy_list, start=1)]
+        #
+        # print("        Р А Б О Т О Д А Т Е Л И        ")
+        # [print(f"{i}) {v}") for i, v in enumerate(employees_list, start=1)]
 
 
 def user_input(default: bool = False) -> dict[str, str | int | list[str]]:
@@ -217,6 +241,189 @@ def user_input(default: bool = False) -> dict[str, str | int | list[str]]:
                 parameters['salary_range'] = salary_range
 
     return parameters
+
+
+def get_vacancy_data(file_connector):
+    what_to_do = input("\nПолучение готовых данных для PostgreSQL:"
+                       "(Запрос с HH.ru по вакансиям, доп. запросы по работодателям, удаление дубликатов) (1) \n"
+                       "Сделать запрос с HH.ru по вакансиям + работодатели + выбрать параметры поиска (2) \n"
+                       "Загрузить вакансии из файла (3) \n"
+                       "Загрузить из файла и отфильтровать (4) \n")
+
+    if what_to_do == '1':
+        vacancy_employers = get_request_info_universal(user_input(True), api_type='HeadHunter')
+        vacancy_list = vacancy_employers[0]
+        employees_list = vacancy_employers[1]
+        employees_list = Employer.remove_duplicates(employees_list)
+
+        all_employer_vacancy_list = []
+
+        len_employers_list = len(employees_list)
+
+        for i, e in enumerate(employees_list, start=1):
+            print(f"Работодатель {i} из {len_employers_list} ({i * 100 // len_employers_list}%)")
+            e_info = HhApi.employer_get_vacancies(e.id, only_with_salary=True)
+            all_employer_vacancy_list.extend(e_info)
+
+        vacancy_list.extend(all_employer_vacancy_list)
+        vacancy_list = Vacancy.remove_duplicates(vacancy_list)
+
+    elif what_to_do == '2':
+        # vacancy_list = get_request_info(user_input(True), 'HeadHunter')
+        # employees_list = get_request_info_employees(user_input(True), 'HeadHunter')
+        vacancy_employers = get_request_info_universal(user_input(False), api_type='HeadHunter')
+        vacancy_list = vacancy_employers[0]
+        employees_list = vacancy_employers[1]
+
+    elif what_to_do == '3':
+        vacancy_list = open_file(file_connector)
+        employees_list = open_file_employers(file_connector)
+    elif what_to_do == '4':
+        vacancy_list = open_file(file_connector)
+        employees_list = open_file_employers(file_connector)
+        vacancy_list = Vacancy.apply_filters(vacancy_list, user_input(False))
+    else:
+        exit(0)
+    print("        В А К А Н С И И       ")
+    [print(f"{i}) {v}") for i, v in enumerate(vacancy_list, start=1)]
+
+    print("        Р А Б О Т О Д А Т Е Л И        ")
+    [print(f"{i}) {v}") for i, v in enumerate(employees_list, start=1)]
+
+    return {'vacancy': vacancy_list, 'employees': employees_list}
+
+
+def work_with_vacancy_class(vacancy_list: list[Vacancy], employees_list: list[Employer], file_connector):
+    while True:
+
+        what_to_do = input(" Отфильтровать (1) \n Удалить дубликаты (2) \n"
+                            " Пере-сохранить в файл (3) \n Добавить в файл (4)\n"
+                            " Загрузить вакансии из файла (5) \n"
+                            " Удалить конкретную вакансию (вакансии) из списка (6) \n"
+                            " Запрос информации о вакансиях работодателя из списка (7) \n"
+                            " Вакансии всех работодателей (8) \n"
+                            " Выход БЕЗ СОХРАНЕНИЯ (9) \n"
+                            " СОХРАНИТЬ результаты и выйти (10) \n")
+
+        if what_to_do == '1':
+            vacancy_list = Vacancy.apply_filters(vacancy_list, user_input(False))
+        elif what_to_do == '2':
+            vacancy_list = Vacancy.remove_duplicates(vacancy_list)
+            employees_list = Employer.remove_duplicates(employees_list)
+        elif what_to_do == '3':
+            save_to_file(vacancy_list, employees_list, file_connector, True)
+        elif what_to_do == '4':
+            save_to_file(vacancy_list, employees_list, file_connector, False)
+        elif what_to_do == '5':
+            vacancy_list = open_file(file_connector)
+        elif what_to_do == '6':
+            v_list = verify_list(input("Номера вакансий, которые вы хотите удалить (введите номера через пробел)"),
+                             len(vacancy_list))
+            print(v_list)
+            if v_list:
+                v_deleted = [vacancy for number, vacancy in enumerate(vacancy_list, start=1) if number in v_list]
+                print("Будут удалены следующие вакансии: ")
+                [print(f"{v_del[0]}) {v_del[1]}") for v_del in zip(v_list, v_deleted)]
+                if input("Удалить? Y(Enter)/N") in ['Y', '', 'y']:
+                    vacancy_list = [v for num, v in enumerate(vacancy_list, start=1) if num not in v_list]
+
+        elif what_to_do == '7':
+            e_list = verify_list(input("Номер работодателей, вакансии которых вы хотите получить"), len(employees_list))
+            print(e_list)
+
+            if e_list:
+                e_print = [employer for number, employer in enumerate(employees_list, start=1) if number in e_list]
+                print("Информация по вакансиям: ")
+                e_info = []
+
+                chosen_employer_vacancy_list = []
+                for e in e_print:
+                    e_info = HhApi.employer_get_vacancies(e.id)
+                    chosen_employer_vacancy_list.extend(e_info)
+
+                    print("Информация по полученным вакансиям: ")
+                    print(f"Работодатель: {e}, \n Вакансии: \n")
+                    [print(f"{i}){v}") for i, v in enumerate(e_info, start=1)]
+
+        elif what_to_do == '8':
+            len_employers_list = len(employees_list)
+            all_employer_vacancy_list = []
+
+            for i, e in enumerate(employees_list, start=1):
+                print(f"Работодатель {i} из {len_employers_list} ({i * 100 // len_employers_list}%)")
+                e_info = HhApi.employer_get_vacancies(e.id, only_with_salary=True)
+                all_employer_vacancy_list.extend(e_info)
+
+            vacancy_list.extend(all_employer_vacancy_list)
+
+        elif what_to_do == '9':
+            break
+        elif what_to_do == '10':
+            save_to_file(vacancy_list, employees_list, file_connector, True)
+            return
+        else:
+            break
+
+        print("        В А К А Н С И И       ")
+        [print(f"{i}) {v}") for i, v in enumerate(vacancy_list, start=1)]
+
+        print("        Р А Б О Т О Д А Т Е Л И        ")
+        [print(f"{i}) {v}") for i, v in enumerate(employees_list, start=1)]
+
+    return {'vacancy': vacancy_list, 'employees': employees_list}
+
+
+def work_with_db(vacancy_list, employees_list, file_connector):
+    what_to_do = input(" Отфильтровать (1) \n"
+                       " Пере-сохранить в файл (2) \n"
+                       " Добавить в файл (3)\n"
+                       " Загрузить вакансии из файла (4) \n"
+                       " Удалить конкретную вакансию (вакансии) из БД (5) \n"
+                       " Запрос информации о вакансиях работодателя из списка (7) \n"
+                       " Вакансии всех работодателей (8) \n"
+                       " Выход БЕЗ СОХРАНЕНИЯ (9) \n"
+                       " СОХРАНИТЬ результаты и выйти (10) \n")
+
+    if what_to_do == '1':
+        vacancy_list = Vacancy.apply_filters(vacancy_list, user_input(False))
+    elif what_to_do == '2':
+        save_to_file(vacancy_list, employees_list, file_connector, True)
+    elif what_to_do == '3':
+        save_to_file(vacancy_list, employees_list, file_connector, False)
+    elif what_to_do == '4':
+        vacancy_list = open_file(file_connector)
+    elif what_to_do == '5':
+        v_list = verify_list(input("Номера вакансий, которые вы хотите удалить (введите номера через пробел)"),
+                             len(vacancy_list))
+        print(v_list)
+        if v_list:
+            v_deleted = [vacancy for number, vacancy in enumerate(vacancy_list, start=1) if number in v_list]
+            v_id_str = [str(v.vacancy_id) for number, v in enumerate(vacancy_list, start=1) if number in v_list]
+            print("Будут удалены следующие вакансии: ")
+            [print(f"{v_del[0]}) {v_del[1]}") for v_del in zip(v_list, v_deleted)]
+            if input("Удалить? Y(Enter)/N") in ['Y', '', 'y']:
+                vacancy_list = [v for num, v in enumerate(vacancy_list, start=1) if num not in v_list]
+                # if file_connector. isinstance(file_connector, DBManager):
+                #     if input(f"Из базы данных Postgres их тоже удалить? Y(Enter)/N") in ['Y', '', 'y']:
+                #         file_connector.delete_vacancies_by_id(v_id_str)
+
+
+
+    elif what_to_do == '9':
+        exit(0)
+    elif what_to_do == '10':
+        save_to_file(vacancy_list, employees_list, file_connector, True)
+        exit(0)
+    else:
+        pass
+
+    print("        В А К А Н С И И       ")
+    [print(f"{i}) {v}") for i, v in enumerate(vacancy_list, start=1)]
+
+    print("        Р А Б О Т О Д А Т Е Л И        ")
+    [print(f"{i}) {v}") for i, v in enumerate(employees_list, start=1)]
+
+    return {'vacancy': vacancy_list, 'employees': employees_list}
 
 
 def get_request_info(parameters_input, api_type: str = 'HeadHunter') -> list[Vacancy]:
