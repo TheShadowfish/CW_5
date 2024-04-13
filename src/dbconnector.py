@@ -76,9 +76,9 @@ class DBManager(AbsoluteFileConnector, LoadWrite, DBManagerNeedToPerform):
         try:
             with psycopg2.connect(**self.conn_params) as conn:
                 with conn.cursor() as cur:
-                    cur.execute(f"SELECT * FROM employers")
-                    cur.execute(f"SELECT * FROM vacancies")
-                    cur.execute(f"SELECT * FROM regions")
+                    cur.execute("SELECT * FROM employers")
+                    cur.execute("SELECT * FROM vacancies")
+                    cur.execute("SELECT * FROM regions")
             conn.close()
         except Exception as e:
             print(f'Исключение {e}. База данных {self.conn_params} и таблицы в ней еще не созданы')
@@ -217,7 +217,7 @@ class DBManager(AbsoluteFileConnector, LoadWrite, DBManagerNeedToPerform):
             vacancies = self.checked_tables(vacancies, self.__tables[2])
 
         else:
-            if input(f"Сейчас произойдет потенциально необратимая операция... Продолжать? Y/N") != 'Y':
+            if input("Сейчас произойдет потенциально необратимая операция... Продолжать? Y/N") != 'Y':
                 self.clear_all_tables()
 
         # В данном случае конечно пишет таблицу в БД. Хотя она тоже в итоге файл, или несколько?
@@ -246,7 +246,7 @@ class DBManager(AbsoluteFileConnector, LoadWrite, DBManagerNeedToPerform):
         except Exception as e:
             print(f'\n ОШИБКА: {e} при записи следующего:')
             print(f"INSERT INTO {table_name} VALUES ({string_s}) {tuple_string}")
-            input(f'Ошибка, ознакомьтесь! Программа продолжит работу после нажатия Enter. \n')
+            input('Ошибка, ознакомьтесь! Программа продолжит работу после нажатия Enter. \n')
         else:
             # если запрос без ошибок - заносим в БД
             conn2.commit()
@@ -271,7 +271,7 @@ class DBManager(AbsoluteFileConnector, LoadWrite, DBManagerNeedToPerform):
         except Exception as e:
             print(f'\n ОШИБКА: {e} при удалении следующего:')
             print(f"DELETE FROM vacancies WHERE vacancy_id IN ({', '.join(id_list)})")
-            input(f'Ошибка, ознакомьтесь! Программа продолжит работу после нажатия Enter. \n')
+            input('Ошибка, ознакомьтесь! Программа продолжит работу после нажатия Enter. \n')
         else:
             # если запрос без ошибок - заносим в БД
             conn2.commit()
@@ -287,11 +287,11 @@ class DBManager(AbsoluteFileConnector, LoadWrite, DBManagerNeedToPerform):
         cur = conn2.cursor()
 
         try:
-            cur.execute(f"DELETE FROM vacancies WHERE salary == 0")
+            cur.execute("DELETE FROM vacancies WHERE salary = 0")
         except Exception as e:
             print(f'\n ОШИБКА: {e} при удалении следующего:')
-            print(f"DELETE FROM vacancies WHERE salary == 0")
-            input(f'Ошибка, ознакомьтесь! Программа продолжит работу после нажатия Enter. \n')
+            print("DELETE FROM vacancies WHERE salary = 0")
+            input('Ошибка, ознакомьтесь! Программа продолжит работу после нажатия Enter. \n')
         else:
             # если запрос без ошибок - заносим в БД
             conn2.commit()

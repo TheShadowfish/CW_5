@@ -153,7 +153,7 @@ class Vacancy:
 
     def is_duplicate(self, other) -> bool:
         """
-        сравнить, совпадают ли ID вакансии
+        Cравнить, совпадают ли ID вакансии
         Ни за что не поверить, но описание вакансии отдается c Hh фрагментарно и зависит от запроса.
         Ну хоть по ID можно сравнить.
         """
@@ -284,8 +284,8 @@ class Employer:
 
     __slots__ = ('__id', '__name', '__url', '__vacancies_url')
 
-    def __init__(self, id: int, name: str, url: str, vacancies: str):
-        valid_data = self.validation(id=id, name=name, url=url, vacancies=vacancies)
+    def __init__(self, employer_id: int, name: str, url: str, vacancies: str):
+        valid_data = self.validation(id=employer_id, name=name, url=url, vacancies=vacancies)
         self.__id = valid_data['id']
         self.__name = valid_data['name']
         self.__url = valid_data['url']
@@ -392,86 +392,8 @@ class Employer:
         for e in employer_list:
             for e_checked in different_employer:
                 if e.is_duplicate(e_checked):
-                    # input(f"Дубликат: {e_checked} ||| {e}")
                     break
             else:
                 different_employer.append(e)
 
-        # print(f"Проверка, было: {len(employer_list)}, стало: {len(different_employer)}")
-
         return different_employer
-
-    @staticmethod
-    def apply_filters(vacancy_list: list, parameters: dict) -> list:
-        """
-        """
-        raise NotImplementedError("Фильтр по работодателям не реализован")
-        # filtered_vacancy_list = []
-        # if isinstance(parameters['filter_words'], list):
-        #     filter_list = parameters['filter_words'][:]
-        # else:
-        #     filter_list = [parameters['filter_words']]
-        # filter_list.append(parameters['professional_role'])
-        # filter_list = [f for f in filter_list if f != '']
-        # # print(filter_list)
-        # # print(parameters['filter_words'])
-        # # print(parameters['professional_role'])
-        #
-        # salary = [int(s.strip()) for s in parameters['salary_range'].split() if s.isdigit()]
-        #
-        # for vac in vacancy_list:
-        #     append = True
-        #
-        #     if len(salary) == 2 and (salary[0] >= vac.salary or salary[1] <= vac.salary):
-        #         append = False
-        #
-        #     elif parameters['filter_region'] != '' and parameters['filter_region'] != vac.region:
-        #         append = False
-        #
-        #     elif len(filter_list) > 0:
-        #         for word in filter_list:
-        #             if word in vac.requirements or word in vac.name:
-        #                 break
-        #         else:
-        #             append = False
-        #
-        #     if append:
-        #         # input(f"TRUE!!, \n {parameters} \n  {vac}? True?")
-        #         filtered_vacancy_list.append(vac)
-        #     else:
-        #         pass
-        #
-        # return (sorted(filtered_vacancy_list, reverse=True))[0:parameters['top_n']]
-    # def employer_all_info(self):
-
-
-
-    """
-    Методы для операций сравнения:
-    __lt__(self, other) — <;
-    __le__(self, other) — <=;
-    __eq__(self, other) — ==;
-    __ne__(self, other) — !=;
-    __gt__(self, other) — >;
-    __ge__(self, other) — >=.
-    для определения операций сравнения достаточно в классе определить только три метода: ==, <, <=,
-    если остальные являются их симметричной противоположностью.
-    В этом случае язык Python сам подберет нужный метод и выполнит его при сравнении объектов.
-    """
-
-    @classmethod
-    def __verify_data(cls, other):
-        if not isinstance(other, cls):
-            raise TypeError(f"'{type(cls)}' can't be compared with '{type(other)}'!")
-
-    def __eq__(self, other):
-        self.__verify_data(other)
-        return self.__id == other.__id
-
-    def __lt__(self, other):
-        self.__verify_data(other)
-        return self.__id < other.__id
-
-    def __le__(self, other):
-        self.__verify_data(other)
-        return self.__id <= other.__id
