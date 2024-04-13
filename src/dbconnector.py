@@ -119,8 +119,6 @@ class DBManager(AbsoluteFileConnector, LoadWrite, DBManagerNeedToPerform):
                 print("Таблица employers удалена!")
                 cur.execute('TRUNCATE TABLE vacancies RESTART IDENTITY CASCADE;')
                 print("Таблица vacancies удалена!")
-                # TRUNCATE [ TABLE ] [ ONLY ] name [ * ] [, ... ] [ RESTART IDENTITY | CONTINUE IDENTITY ] [ CASCADE | RESTRICT ]
-
         conn.close()
 
     def generate_bd_script(self):
@@ -219,11 +217,8 @@ class DBManager(AbsoluteFileConnector, LoadWrite, DBManagerNeedToPerform):
             vacancies = self.checked_tables(vacancies, self.__tables[2])
 
         else:
-            # print(f"Мы такого делать не будем, у нас пока стиралка не работает.")
-            # print(f"Хотя нет, РАБОТАЕТ (*грохот на заднем фоне*)")
             if input(f"Сейчас произойдет потенциально необратимая операция... Продолжать? Y/N") != 'Y':
                 self.clear_all_tables()
-                # input("Не прячьте ваши файлики по норам и углам, проверьте ваши файлики, иначе быть беде... Похоже ваши файлики затерты были там. Похоже ваши файлики затерты были... Где??")
 
         # В данном случае конечно пишет таблицу в БД. Хотя она тоже в итоге файл, или несколько?
         self.write_list_to_file(regions, 'regions')
@@ -393,11 +388,8 @@ class DBManager(AbsoluteFileConnector, LoadWrite, DBManagerNeedToPerform):
             with conn.cursor() as cur:
                 cur.execute(request)
                 rows = cur.fetchall()
-
-                checked_table = []
                 for row in rows:
                     print(row)
-
         conn.close()
 
     def get_companies_and_vacancies_count(self):
