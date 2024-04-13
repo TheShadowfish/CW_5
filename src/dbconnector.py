@@ -1,8 +1,8 @@
 import psycopg2
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT  # <-- ADD THIS LINE
 
-import os
-import csv
+# import os
+# import csv
 from src.connectors import LoadWrite, AbsoluteFileConnector
 from decouple import config
 from abc import ABC, abstractmethod
@@ -157,20 +157,19 @@ class DBManager(AbsoluteFileConnector, LoadWrite):
                 cur.execute(create_vacancy)
                 print("Таблица vacancy создана!")
 
-    def print_database_table(self, bdname, tablename):
-
-        print(f"\n Таблица в базе {bdname}(localhost) {tablename}: \n")
-
+    def print_database_table(self, table_number=0):
+        if len(self.__tables) < table_number < len(self.__tables):
+            raise ValueError(f"В базе только {len(self.__tables)} таблицы: {self.__tables}.")
+        print(f"\n Таблица в базе {self.__db_name}(localhost) {self.__tables[table_number]}: \n")
         with psycopg2.connect(**self.conn_params) as conn:
             with conn.cursor() as cur:
-                # cur.execute("INSERT INTO mytable VALUES (%s, %s, %s)", (4, name, description))
-                cur.execute(f"SELECT * FROM {tablename}")
+                cur.execute(f"SELECT * FROM {self.__tables[table_number]}")
                 rows = cur.fetchall()
                 for row in rows:
                     print(row)
         conn.close()
 
-    def write_to_file(self, vacancy_list: list[Vacancy], employer_list: list[Employer]):
+    def write_to_file(self, vacancy_list: list[Vacancy], employer_list: list[Employer], append_only_new_data=False):
         """
         Пишет в базу данных PostgreSQL информацию о работодателях и вакансиях.
 
@@ -189,172 +188,161 @@ class DBManager(AbsoluteFileConnector, LoadWrite):
         id - int, связь с employer_id (Vacancy) - один ко многим
         name, url, vacancies_url - string
         """
-        # # работодатели
-        # create_region = "CREATE TABLE regions (region_id int UNIQUE PRIMARY KEY, region_name varchar(50) NOT NULL);"
-        #
-        # create_employers = "CREATE TABLE employers (\
-        #                              employer_id int UNIQUE PRIMARY KEY,\
-        #                              name varchar(200) NOT NULL,\
-        #                              url varchar(200) NOT NULL,\
-        #                              vacancies_url varchar(250) NOT NULL\
-        #                              );"
-        #
-        # # надо бы id вакансии получать с hh, лучше, чем самому автогенерировать.
-        # create_vacancy = "CREATE TABLE vacancies (\
-        #                              vacancy_id int UNIQUE PRIMARY KEY,\
-        #                              name varchar(200) NOT NULL,\
-        #                              url varchar(200) NOT NULL,\
-        #                              salary int,\
-        #                              region_id int REFERENCES regions(region_id),\
-        #                              employer_id int REFERENCES employers(employer_id),\
-        #                              requirements text\
-        #                              );"
-        # int_from_str = lambda x: int(x) if x.isdigit() else x
-        # список кортежей для cur.executemany
-        # tuple_string = [tuple([int_from_str(v) for v in line.values()]) for line in cvs_data]
 
         # регионы
-        regions = [{'region_id': int(v.region_id), 'region_name': v.region} for v in vacancy_list]
+
+        # так короче
+        regions = list(set([(int(v.region_id), v.region) for v in vacancy_list]))
+
+        # а так быстрее должно работать
+        # regions = []
+        # for v in vacancy_list:
+        #     for v_checked in regions:
+        #         if (int(v.region_id), v.region) == v_checked:
+        #             break
+        #     else:
+        #         regions.append((int(v.region_id), v.region))
 
         # работодатели
-        employers = [{'employer_id': int(e.id), 'name': e.name, 'url': e.url,
-                      'vacancies_url': e.vacancies} for e in employer_list]
+        employers = [(int(e.id), e.name, e.url, e.vacancies) for e in employer_list]
 
         # вакансии
-        vacancies = [{'vacancy_id': int(v.vacancy_id), 'name': v.name, 'url': v.url, 'salary': int(v.salary),
-                      'region_id': int(v.region_id), 'employer_id': int(v.employer_id),
-                      'requirements': v.requirements} for v in vacancy_list]
+        vacancies = [(int(v.vacancy_id), v.name, v.url, int(v.salary), int(v.region_id),
+                      int(v.employer_id), v.requirements) for v in vacancy_list]
 
-        # в данном случае конечно пишет таблицу в БД. Хотя она тоже файл, вроде как.
+        # затирает всю базу данных?
+        if not append_only_new_data:
+            if input("Вы уверенны, что стоит стереть все данные из базы?") != 'Y':
+                append_only_new_data = True
+
+        if append_only_new_data:
+            regions = self.checked_tables(regions, self.__tables[0])
+            employers = self.checked_tables(employers, self.__tables[1])
+            vacancies = self.checked_tables(vacancies, self.__tables[2])
+
+        else:
+            print(f"Мы такого делать не будем, у нас пока стиралка не работает.")
+            return
+
+        # в данном случае конечно пишет таблицу в БД. Хотя она тоже в итоге файл, или несколько?
         self.write_list_to_file(regions, 'regions')
         self.write_list_to_file(employers, 'employers')
         self.write_list_to_file(vacancies, 'vacancies')
 
     def write_list_to_file(self, my_list: list, file):
+        """
+        my_list - список вставляемых в БД строк
+        file - название таблицы, куда вставляем
+        """
         tuple_string = my_list
         tablename = file
+        if len(tuple_string) == 0:
+            print(f"{tablename} не содержит новых данных, не имеющихся в базе данных. Пропускаем.")
+            return
+
         string_s = ', '.join(['%s' for i in range(len(tuple_string[0]))])
         conn2 = psycopg2.connect(**self.conn_params)
-        cur = conn2.cursor()
-        print(f"INSERT INTO {tablename} VALUES ({string_s}) {tuple_string}")
-
-        try:
-            cur.executemany(f"INSERT INTO {tablename} VALUES ({string_s})", tuple_string)
-        except Exception as e:
-            print(f'Ошибка: {e}')
-        else:
-            # если запрос без ошибок - заносим в БД
-            conn2.commit()
-        finally:
-            cur.close()
-            conn2.close()
-
-    # def read_from_file(self) -> list[Vacancy]:
-    #     """
-    #     Загружает информацию из файла vacancy в папке data
-    #     list[Vacancy] - возвращает список вакансий
-    #     """
-
-    # @abstractmethod
-    # def load_list_from_file(self, file) -> list:
-    #     pass
-    #
-    # @abstractmethod
-
-    # def read_employers_from_file(self) -> list[Employer]:
-    #     """
-    #     Загружает информацию файла employers в папке data(по умолчанию)
-    #     list[Employer] - возвращает список работодателей
-    #     """
-
-    # def append_to_file(self, vacancy_list: list[Vacancy], employer_list: list[Employer]):
-    #     """
-    #     Читает файл vacancy.json в директории data,
-    #     добавляет к прочитанному имеющиеся вакансии,
-    #     перезаписывает файл.
-    #     """
-
-    def read_from_file(self) -> list[Vacancy]:
-        raise NotImplementedError
-        pass
-
-    def load_list_from_file(self, file) -> list:
-        raise NotImplementedError
-        pass
-
-    def read_employers_from_file(self) -> list[Employer]:
-        raise NotImplementedError
-        pass
-
-    def append_to_file(self, vacancy_list: list[Vacancy], employer_list: list[Employer]):
-        raise NotImplementedError
-        pass
-
-    def script_in_main_py(self, write_bd: bool):
-        """
-        Написать скрипт в main.py, который заполнит созданные таблицы данными из north_data
-        Для подключения к БД использовать библиотеку psycopg2.
-        Зайти в pgAdmin и убедиться, что данные в таблицах есть.
-        """
-        if write_bd:
-            # customers_data
-            data_list = self.read_from_file("customers_data.csv")
-            self.write_to_database("customers_data", data_list)
-            # employees_data
-            data_list = self.read_from_file("employees_data.csv")
-            self.write_to_database("employees_data", data_list)
-            # orders_data
-            data_list = self.read_from_file("orders_data.csv")
-            self.write_to_database("orders_data", data_list)
-
-        self.print_database_table("customers_data")
-        self.print_database_table("employees_data")
-        self.print_database_table("orders_data")
-
-    def read_from_file(self, filename: str = '') -> dict:
-        """
-        Загружает информацию из файла csv в папке north_data
-        filename - название файла
-        list[] - возвращает список словарей
-        """
-        filepath = os.path.join('north_data', filename)
-        if not os.path.exists(filepath):
-            raise FileNotFoundError(f"file {filepath} not found!")
-            data_csv = []
-        with open(filepath) as my_csv:
-            reader = csv.DictReader(my_csv)
-            data_csv = list(reader)
-        return data_csv
-
-    def write_to_database(self, tablename, cvs_data: list[dict]):
-        conn_params = {
-            "host": "localhost",
-            "database": "north",
-            "user": "postgres",
-            "password": "12345"
-        }
-        # количество параметров VALUES в INSERT INTO, т.е. (%s, %s, ... %s)
-        string_s = ', '.join(['%s' for i in range(len(cvs_data[0]))])
-
-        # превращает числовые значения в числа, строковые не меняет
-        int_from_str = lambda x: int(x) if x.isdigit() else x
-        # список кортежей для cur.executemany
-        tuple_string = [tuple([int_from_str(v) for v in line.values()]) for line in cvs_data]
-
-        conn2 = psycopg2.connect(**conn_params)
         cur = conn2.cursor()
         # print(f"INSERT INTO {tablename} VALUES ({string_s}) {tuple_string}")
 
         try:
             cur.executemany(f"INSERT INTO {tablename} VALUES ({string_s})", tuple_string)
         except Exception as e:
-            print(f'Ошибка: {e}')
+            print(f'\n ОШИБКА: {e} при записи следующего:')
+            print(f"INSERT INTO {tablename} VALUES ({string_s}) {tuple_string}")
+            input(f'Ошибка, ознакомьтесь! Программа продолжит работу после нажатия Enter. \n')
         else:
             # если запрос без ошибок - заносим в БД
             conn2.commit()
         finally:
             cur.close()
             conn2.close()
+
+    def load_list_from_file(self, file) -> list:
+        """
+        list содержит данные запроса
+        file - описание того, что будем получать (Vacancy, Employers)
+        """
+        if file == 'Vacancy':
+            # Vacancy(self, name: str, url: str, salary: str, region: str, requirements: str,
+            #                  employer_id: str, region_id: str, vacancy_id: str)
+
+            request = 'SELECT\
+             vacancies.name, url, salary, region_name, requirements, employer_id, region_id, vacancy_id\
+             FROM vacancies JOIN regions USING (region_id);'
+
+        elif file == 'Employer':
+            # Employer(self, id: int, name: str, url: str, vacancies: str)
+            # Запрос:
+            request = 'SELECT * FROM employers;'
+
+        else:
+            raise NotImplementedError(f"{file} != (Vacancy | Employer)")
+
+        with psycopg2.connect(**self.conn_params) as conn:
+            with conn.cursor() as cur:
+                cur.execute(request)
+                rows = cur.fetchall()
+
+                new_table = [row for row in rows]
+                # for row in rows:
+                #     newtable.append(row)
+
+        conn.close()
+        # [print(line) for line in new_table]
+        # input("SEE///")
+        return new_table
+
+
+    def read_from_file(self) -> list[Vacancy]:
+        """
+        Загружает информацию из файла vacancy в папке data
+        list[Vacancy] - возвращает список вакансий
+        """
+        vacancy_list = [Vacancy(*line) for line in self.load_list_from_file('Vacancy')]
+
+        return vacancy_list
+
+    def read_employers_from_file(self) -> list[Employer]:
+        """
+        Загружает информацию файла employers в папке data(по умолчанию)
+        list[Employer] - возвращает список работодателей
+        """
+        employer_list = [Employer(*line) for line in self.load_list_from_file('Employer')]
+        return employer_list
+
+    def append_to_file(self, vacancy_list: list[Vacancy], employer_list: list[Employer]):
+        """
+        Читает файл базу данных PostgreSQL,
+        добавляет к прочитанному вакансии и работодателей, которых не было.
+        """
+        self.write_to_file(vacancy_list, employer_list, append_only_new_data=True)
+
+    def checked_tables(self, table, table_name) -> list:
+        if table_name not in self.__tables:
+            raise ValueError(f"В базе только {len(self.__tables)} таблицы: {self.__tables}.")
+
+        print(f"\n Таблица в базе {self.__db_name}(localhost) {table_name}: \n")
+        with psycopg2.connect(**self.conn_params) as conn:
+            with conn.cursor() as cur:
+                cur.execute(f"SELECT * FROM {table_name}")
+                rows = cur.fetchall()
+
+                newtable = []
+                for line in table:
+                    for row in rows:
+                        if line[0] == row[0]:
+                            print(f"совпадение с БД!: {row} == {line}")
+                            break
+                    else:
+                        newtable.append(line)
+
+        conn.close()
+        # [print(line) for line in newtable]
+        # input("SEE///")
+        return newtable
+
+
 
 
 if __name__ == '__main__':

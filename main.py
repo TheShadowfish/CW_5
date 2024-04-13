@@ -2,7 +2,6 @@ from src.api_interaction import HhApi
 from src.vacancy import Vacancy, Employer
 import requests
 
-
 # from src.connectors import JsonConnector
 # from src.connectors import CsvConnector
 # from src.connectors import TxtConnector
@@ -32,9 +31,11 @@ def user_interaction():
     # надоело файл выбирать
     # file_connector = JsonConnector()
 
-    what_to_do = input(" Сделать запрос с HH.ru по вакансиям + работодатели (1) \n"
-                       " Загрузить вакансии из файла (2) \n"
-                       " Загрузить из файла и отфильтровать (3) \n")
+    what_to_do = input("\nПолучение готовых данных для PostgreSQL:"
+                       "(Запрос с HH.ru по вакансиям, доп. запросы по работодателям, удаление дубликатов) (0) \n"
+                       "Сделать запрос с HH.ru по вакансиям + работодатели (1) \n"
+                       "Загрузить вакансии из файла (2) \n"
+                       "Загрузить из файла и отфильтровать (3) \n")
 
     # vacancy_list = []
     # json_connector = VacancyJsonConnector()
@@ -43,9 +44,31 @@ def user_interaction():
 
     # employees_list = []
 
-    if what_to_do == '1':
-        vacancy_list = get_request_info(user_input(True), 'HeadHunter')
-        employees_list = get_request_info_employees(user_input(True), 'HeadHunter')
+    if what_to_do == '0':
+        vacancy_employers = get_request_info_universal(user_input(True), api_type='HeadHunter')
+        vacancy_list = vacancy_employers[0]
+        employees_list = vacancy_employers[1]
+        employees_list = Employer.remove_duplicates(employees_list)
+
+        all_employer_vacancy_list = []
+
+        len_employers_list = len(employees_list)
+
+        for i, e in enumerate(employees_list, start=1):
+            print(f"Работодатель {i} из {len_employers_list} ({i*100//len_employers_list}%)")
+            e_info = HhApi.employer_get_vacancies(e.id, only_with_salary=True)
+            all_employer_vacancy_list.extend(e_info)
+
+        vacancy_list.extend(all_employer_vacancy_list)
+        vacancy_list = Vacancy.remove_duplicates(vacancy_list)
+
+    elif what_to_do == '1':
+        # vacancy_list = get_request_info(user_input(True), 'HeadHunter')
+        # employees_list = get_request_info_employees(user_input(True), 'HeadHunter')
+        vacancy_employers = get_request_info_universal(user_input(True), api_type='HeadHunter')
+        vacancy_list = vacancy_employers[0]
+        employees_list = vacancy_employers[1]
+
     elif what_to_do == '2':
         vacancy_list = open_file(file_connector)
         employees_list = open_file_employers(file_connector)
@@ -108,41 +131,37 @@ def user_interaction():
                 choosen_employer_vacancy_list = []
                 for e in e_print:
                     # input(f"ID= {e.id}, URL={e.url}")
-                    e_info = HhApi.employer_get_vacancies(e.id, e.url)
+                    e_info = HhApi.employer_get_vacancies(e.id)
                     choosen_employer_vacancy_list.extend(e_info)
 
-                    print("Информация по полученым вакансиям: ")
+                    print("Информация по полученным вакансиям: ")
                     print(f"Работодатель: {e}, \n Вакансии: \n")
                     [print(f"{i}){v}") for i, v in enumerate(e_info, start=1)]
                     # input("Ожидание реакции...")
-
 
         elif what_to_do == '8':
             # все работодатели
-            e_list = range(0, len(employees_list))
-            print(e_list)
+            # e_list = range(0, len(employees_list))
+            # print(e_list)
+            #
+            # if e_list:
+            #     e_print = [employer for number, employer in enumerate(employees_list, start=1) if number in e_list]
+            #     print("Информация по вакансиям: ")
+            #     e_info = []
+            len_employers_list = len(employees_list)
+            all_employer_vacancy_list = []
 
-            if e_list:
-                e_print = [employer for number, employer in enumerate(employees_list, start=1) if number in e_list]
-                print("Информация по вакансиям: ")
-                e_info = []
+            for i, e in enumerate(employees_list, start=1):
+                print(f"Работодатель {i} из {len_employers_list} ({i * 100 // len_employers_list}%)")
+                e_info = HhApi.employer_get_vacancies(e.id, only_with_salary=True)
+                all_employer_vacancy_list.extend(e_info)
 
-                all_employer_vacancy_list = []
-                for e in employees_list:
+                # print("Информация по полученным вакансиям: ")
+                # print(f"Работодатель: {e}, \n Вакансии: \n")
+                # [print(f"{i}){v}") for i, v in enumerate(e_info, start=1)]4
 
-                    e_info = HhApi.employer_get_vacancies(e.id, e.url)
-                    all_employer_vacancy_list.extend(e_info)
-
-                    print("Информация по полученым вакансиям: ")
-                    print(f"Работодатель: {e}, \n Вакансии: \n")
-                    [print(f"{i}){v}") for i, v in enumerate(e_info, start=1)]
-                    # input("Ожидание реакции...")
-
-            [print(f"{i}){v}") for i, v in enumerate(all_employer_vacancy_list, start=1)]
+            # [print(f"{i}){v}") for i, v in enumerate(all_employer_vacancy_list, start=1)]
             vacancy_list.extend(all_employer_vacancy_list)
-
-
-
 
         elif what_to_do == '9':
             exit(0)
@@ -205,7 +224,6 @@ def get_request_info(parameters_input, api_type: str = 'HeadHunter') -> list[Vac
     Проверка параметров ввода от пользователя, создание экземпляра HhApi, передача параметров в HhApi,
     возврат результатов в списке
     """
-    # print(salary)
     if api_type not in parameters_input['platforms']:
         raise NotImplementedError(f"С платформой {api_type} взаимодействие пока не реализовано")
 
@@ -253,9 +271,6 @@ def get_request_info_employees(parameters_input, api_type: str = 'HeadHunter') -
     Проверка параметров ввода от пользователя, создание экземпляра HhApi, передача параметров в HhApi,
     возврат результатов в списке
     """
-    # print(salary)
-    # get_employers: bool = True
-
     if api_type not in parameters_input['platforms']:
         raise NotImplementedError(f"С платформой {api_type} взаимодействие пока не реализовано")
 
@@ -316,6 +331,58 @@ def get_request_info_employees(parameters_input, api_type: str = 'HeadHunter') -
             # input("see...employer_list")
 
             return employer_list
+            # [print(v) for v in vacancy_list]
+
+
+def get_request_info_universal(parameters_input, api_type: str = 'HeadHunter') -> [[Employer], [Vacancy]]:
+    """
+    Проверка параметров ввода от пользователя, создание экземпляра HhApi, передача параметров в HhApi,
+    возврат результатов в списке списков
+    """
+    if api_type not in parameters_input['platforms']:
+        raise NotImplementedError(f"С платформой {api_type} взаимодействие пока не реализовано")
+
+    if api_type == 'HeadHunter':
+
+        parameters = HhApi.check_parameters_to_request(parameters_input)
+
+        print(f"Parameters {parameters}")
+
+        hh_api = HhApi(**parameters)
+
+        print(f"Get vacation info from hh.ru... ({parameters})")
+        res = hh_api.get_vacancies()
+        print("Done!")
+
+        # смотрим, сколько вакансий
+        print(hh_api)
+
+        user_question = ''
+        if hh_api.pages > 2:
+            user_question = input(f"Обработать все результаты поиска? {hh_api.found} - найдено на сайте, "
+                                  f"выдача {hh_api.pages} страниц по {hh_api.per_page} вакансий? y/n")
+
+        if user_question in {'y', 'Y', 'Н', 'н', ''}:
+            vacancy_list = []
+            employer_list = []
+
+            for page_request in hh_api:
+                print(f"loaded... Page {hh_api.page + 1} ({hh_api.per_page} per_page) "
+                      f"from {hh_api.pages}: {round((hh_api.page + 1) * 100 / hh_api.pages)} %")
+
+                v_next_page = HhApi.return_vacancy_list_from_json(page_request)
+                vacancy_list.extend(v_next_page)
+
+                e_next_page = HhApi.return_employer_list_from_json(page_request)
+                employer_list.extend(e_next_page)
+
+            else:
+                return [vacancy_list, employer_list]
+        else:
+            # res = hh_api.get_vacancies() - вакансии ТОЛЬКО с первой страницы результатов (page = 0)
+            vacancy_list = HhApi.return_vacancy_list_from_json(res)
+            employer_list = HhApi.return_employer_list_from_json(res)
+            return [vacancy_list, employer_list]
             # [print(v) for v in vacancy_list]
 
 
