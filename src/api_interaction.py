@@ -331,13 +331,12 @@ class HhApi(AbstractApiNoAuth, VacancyConstructor):
         return parameters
 
     @staticmethod
-    def employer_get_vacancies(employer_id, url):
+    def employer_get_vacancies(employer_id, only_with_salary=True):
         """
-        Возврат по вакансий по ID работодателя
-        employer_id
+        Возврат по вакансий по ID работодателя (employer_id), ограничение запроса - зарплата указана в вакансии,
+        не более 100 вакансий от работодателя.
         """
-        params_id = {'employer_id': employer_id, 'per_page': 100}
-
+        params_id = {'employer_id': employer_id, 'per_page': 100, 'only_with_salary': only_with_salary}
 
         url_vacancies = 'https://api.hh.ru/vacancies'
         res = requests.get(url_vacancies, params=params_id)
@@ -345,24 +344,7 @@ class HhApi(AbstractApiNoAuth, VacancyConstructor):
         if res.status_code != 200:
             raise Exception(f"Request code= {res.status_code}, request='{url_vacancies}', params={params_id}")
 
-
-        # self.found = res.json()['found']
-        # self.pages = res.json()['pages']
-        # self.page = res.json()['page']
-        # self.per_page = res.json()['per_page']
-
         # return res.json()['items']
-        print(f"FOUND: {res.json()['found']}, pages: {res.json()['pages']}, per_page {res.json()['per_page']}")
-
-
+        print(f"Вакансий найдено: {res.json()['found']}, pages: {res.json()['pages']}, per_page {res.json()['per_page']}")
 
         return HhApi.return_vacancy_list_from_json(res.json()['items'])
-
-    # @staticmethod
-    # def employer_text(url: str):
-    #
-    #     response = requests.get(url)
-    #
-    #     # Получить текст страницы
-    #     text = response.text
-    #     return text
