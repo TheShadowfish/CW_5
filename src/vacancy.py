@@ -15,12 +15,14 @@ class Vacancy:
 
     """
 
-    __slots__ = ('__name', '__url', '__salary', '__region', '__requirements', '__employeer_id')
+    __slots__ = ('__name', '__url', '__salary', '__region', '__requirements',
+                 '__employer_id', '__region_id', '__vacancy_id')
 
-    def __init__(self, name: str, url: str, salary: str, region: str, requirements: str, employeer_id: str):
+    def __init__(self, name: str, url: str, salary: str, region: str, requirements: str,
+                 employer_id: str, region_id: str, vacancy_id: str):
         valid_data = self.validation(name=name, url=url, salary=salary,
                                      region=region, requirements=requirements,
-                                     employeer_id = employeer_id)
+                                     employer_id=employer_id, region_id=region_id, vacancy_id=vacancy_id)
         self.__name = valid_data['name']
         self.__url = valid_data['url']
         self.__salary = valid_data['salary']
@@ -28,11 +30,14 @@ class Vacancy:
         # self.__salary_from = valid_data['salary_from']
         # self.__salary_to = valid_data['salary_to']
 
-
         self.__region = valid_data['region']
         self.__requirements = valid_data['requirements']
 
-        self.__employeer_id = valid_data['employeer_id']
+        self.__employer_id = valid_data['employer_id']
+
+        self.__region_id = valid_data['region_id']
+
+        self.__vacancy_id = valid_data['vacancy_id']
 
         # employer_id  string  Идентификатор   работодателя.Можно   указать    несколько    значений
 
@@ -56,6 +61,18 @@ class Vacancy:
     def requirements(self):
         return self.__requirements
 
+    @property
+    def region_id(self):
+        return self.__region_id
+
+    @property
+    def employer_id(self):
+        return self.__employer_id
+
+    @property
+    def vacancy_id(self):
+        return self.__vacancy_id
+
     @staticmethod
     def validation(**kwargs) -> dict:
         """
@@ -77,14 +94,13 @@ class Vacancy:
         if kwargs['requirements'] is None:
             kwargs['requirements'] = none_text
 
-
-        kwargs['employeer_id'] = int(kwargs['employeer_id'])
-
-        # if not isinstance(kwargs['employeer_id'], int):
+        # if isinstance(kwargs['employer_id'], str) and kwargs['employer_id'].isdigit() :
         #     raise ValueError('Идентификатор работодателя должен быть числом')
         # else:
-        #     kwargs['employeer_id'] = int(kwargs['employeer_id'])
+        kwargs['employer_id'] = int(kwargs['employer_id'])
 
+        kwargs['region_id'] = int(kwargs['region_id'])
+        kwargs['vacancy_id'] = int(kwargs['vacancy_id'])
 
         return kwargs
 
@@ -103,18 +119,19 @@ class Vacancy:
         __Vacancy__employeer_id: 100500999
         PS: Даже если так в коде делать нельзя, мне об этом не говорили.
         """
-        artifical__dict = {}
-        artifical__dict['_Vacancy' + str(self.__slots__[0])] = self.__name
-        artifical__dict['_Vacancy' + str(self.__slots__[1])] = self.__url
-        artifical__dict['_Vacancy' + str(self.__slots__[2])] = self.__salary
-        artifical__dict['_Vacancy' + str(self.__slots__[3])] = self.__region
-        artifical__dict['_Vacancy' + str(self.__slots__[4])] = self.__requirements
-        artifical__dict['_Vacancy' + str(self.__slots__[5])] = self.__employeer_id
+        artificial_dict = {'_Vacancy' + str(self.__slots__[0]): self.__name,
+                           '_Vacancy' + str(self.__slots__[1]): self.__url,
+                           '_Vacancy' + str(self.__slots__[2]): self.__salary,
+                           '_Vacancy' + str(self.__slots__[3]): self.__region,
+                           '_Vacancy' + str(self.__slots__[4]): self.__requirements,
+                           '_Vacancy' + str(self.__slots__[5]): self.__employer_id,
+                           '_Vacancy' + str(self.__slots__[6]): self.__region_id,
+                           '_Vacancy' + str(self.__slots__[7]): self.__vacancy_id}
 
         # Чтобы избежать ошибок, положим грабельки сразу.
-        assert len(artifical__dict) == len(self.__slots__)
+        assert len(artificial_dict) == len(self.__slots__)
 
-        return artifical__dict
+        return artificial_dict
 
     def __repr__(self):
         repr_list = [str(i[0]) + ': ' + str(i[1]) for i in self.__dict__.items()]
@@ -136,19 +153,20 @@ class Vacancy:
 
     def is_duplicate(self, other) -> bool:
         """
-        сравнить, совпадают ли вакансии полностью
-            self.__name = other.__name
-            self.__url = other.__url
-            self.__salary = other.__salary
-            self.__region = other.__region
-            self.__requirements = other.__requirements
+        Cравнить, совпадают ли ID вакансии
+        Ни за что не поверить, но описание вакансии отдается c Hh фрагментарно и зависит от запроса.
+        Ну хоть по ID можно сравнить.
         """
         if not isinstance(other, Vacancy):
             raise TypeError(f"{type(other)} is not a Vacancy exemplar!")
 
-        for s, o in zip(other.__dict__.items(), self.__dict__.items()):
-            if s != o:
-                return False
+        if self.__vacancy_id != other.__vacancy_id:
+            # print(f"self.__vacancy_id == other.__vacancy_id: {self.__vacancy_id} != {other.__vacancy_id}")
+            return False
+        #
+        # for s, o in zip(other.__dict__.items(), self.__dict__.items()):
+        #     if s != o:
+        #         return False
         else:
             return True
 
@@ -250,8 +268,7 @@ class Vacancy:
         return self.__salary <= other.__salary
 
 
-
-class Employeer:
+class Employer:
     """
         Класс для работы с компаниями (работодателями).
         Атрибуты:
@@ -267,8 +284,8 @@ class Employeer:
 
     __slots__ = ('__id', '__name', '__url', '__vacancies_url')
 
-    def __init__(self, id: str, name: str, url: str, vacancies: str):
-        valid_data = self.validation(id = id, name=name, url=url, vacancies=vacancies)
+    def __init__(self, employer_id: int, name: str, url: str, vacancies: str):
+        valid_data = self.validation(id=employer_id, name=name, url=url, vacancies=vacancies)
         self.__id = valid_data['id']
         self.__name = valid_data['name']
         self.__url = valid_data['url']
@@ -302,7 +319,7 @@ class Employeer:
         """
         none_text = 'Не указано'
         # 0 или Зарплата не указана
-        if kwargs['id'].isdigit():
+        if kwargs['id'] is not None:
             kwargs['id'] = int(kwargs['id'])
         else:
             raise ValueError('Идентификатор работодателя должен быть числом')
@@ -329,16 +346,15 @@ class Employeer:
         _Vacancy__requirements: Необходимо умение GNUть антилоп и гладить манула. Опыт по взаимодействию с python'ом.
         PS: Даже если так в коде делать нельзя, мне об этом не говорили.
         """
-        artifical__dict = {}
-        artifical__dict['_Employeer' + str(self.__slots__[0])] = self.__id
-        artifical__dict['_Employeer' + str(self.__slots__[1])] = self.__name
-        artifical__dict['_Employeer' + str(self.__slots__[2])] = self.__url
-        artifical__dict['_Employeer' + str(self.__slots__[3])] = self.__vacancies_url
+        artificial_dict = {'_Employer' + str(self.__slots__[0]): self.__id,
+                           '_Employer' + str(self.__slots__[1]): self.__name,
+                           '_Employer' + str(self.__slots__[2]): self.__url,
+                           '_Employer' + str(self.__slots__[3]): self.__vacancies_url}
 
         # Чтобы избежать ошибок, положим грабельки сразу.
-        assert len(artifical__dict) == len(self.__slots__)
+        assert len(artificial_dict) == len(self.__slots__)
 
-        return artifical__dict
+        return artificial_dict
 
     def __repr__(self):
         repr_list = [str(i[0]) + ': ' + str(i[1]) for i in self.__dict__.items()]
@@ -347,114 +363,37 @@ class Employeer:
     def __str__(self):
         repr_list = [str(i[0]) + ': ' + str(i[1]) for i in self.__dict__.items()]
         delimiter = '\n\t'
-        return f"Вакансия: {delimiter}{delimiter.join(repr_list)}"
+        return f"Работодатель: {delimiter}{delimiter.join(repr_list)}"
 
     def serialize(self):
-        dict_employeer = {key: value for (key, value) in self.__dict__.items()}
-        return dict_employeer
+        dict_employer = {key: value for (key, value) in self.__dict__.items()}
+        return dict_employer
 
     @classmethod
-    def deserialize(cls, dict_employeer):
-        e = cls(*dict_employeer.values())
+    def deserialize(cls, dict_employer):
+        e = cls(*dict_employer.values())
         return e
 
     def is_duplicate(self, other) -> bool:
         """
-        сравнить, совпадают ли вакансии полностью
-            self.__name = other.__name
-            self.__url = other.__url
-            self.__salary = other.__salary
-            self.__region = other.__region
-            self.__requirements = other.__requirements
+        Cравнить, совпадают ли ID работодателя
         """
-        if not isinstance(other, Employeer):
-            raise TypeError(f"{type(other)} is not a Employeer exemplar!")
+        if not isinstance(other, Employer):
+            raise TypeError(f"{type(other)} is not a Employer exemplar!")
 
-        for s, o in zip(other.__dict__.items(), self.__dict__.items()):
-            if s != o:
-                return False
-        else:
+        if self.__id == other.__id:
             return True
+        else:
+            return False
 
     @staticmethod
-    def remove_duplicates(employeer_list: list) -> list:
-        different_employeer = []
-        for e in employeer_list:
-            for e_checked in different_employeer:
+    def remove_duplicates(employer_list: list) -> list:
+        different_employer = []
+        for e in employer_list:
+            for e_checked in different_employer:
                 if e.is_duplicate(e_checked):
                     break
             else:
-                different_employeer.append(e)
-        return different_employeer
+                different_employer.append(e)
 
-    @staticmethod
-    def apply_filters(vacancy_list: list, parameters: dict) -> list:
-        """
-        """
-        raise NotImplementedError("Фильтр по работодателям не реализован")
-        # filtered_vacancy_list = []
-        # if isinstance(parameters['filter_words'], list):
-        #     filter_list = parameters['filter_words'][:]
-        # else:
-        #     filter_list = [parameters['filter_words']]
-        # filter_list.append(parameters['professional_role'])
-        # filter_list = [f for f in filter_list if f != '']
-        # # print(filter_list)
-        # # print(parameters['filter_words'])
-        # # print(parameters['professional_role'])
-        #
-        # salary = [int(s.strip()) for s in parameters['salary_range'].split() if s.isdigit()]
-        #
-        # for vac in vacancy_list:
-        #     append = True
-        #
-        #     if len(salary) == 2 and (salary[0] >= vac.salary or salary[1] <= vac.salary):
-        #         append = False
-        #
-        #     elif parameters['filter_region'] != '' and parameters['filter_region'] != vac.region:
-        #         append = False
-        #
-        #     elif len(filter_list) > 0:
-        #         for word in filter_list:
-        #             if word in vac.requirements or word in vac.name:
-        #                 break
-        #         else:
-        #             append = False
-        #
-        #     if append:
-        #         # input(f"TRUE!!, \n {parameters} \n  {vac}? True?")
-        #         filtered_vacancy_list.append(vac)
-        #     else:
-        #         pass
-        #
-        # return (sorted(filtered_vacancy_list, reverse=True))[0:parameters['top_n']]
-
-    """
-    Методы для операций сравнения:
-    __lt__(self, other) — <;
-    __le__(self, other) — <=;
-    __eq__(self, other) — ==;
-    __ne__(self, other) — !=;
-    __gt__(self, other) — >;
-    __ge__(self, other) — >=.
-    для определения операций сравнения достаточно в классе определить только три метода: ==, <, <=,
-    если остальные являются их симметричной противоположностью.
-    В этом случае язык Python сам подберет нужный метод и выполнит его при сравнении объектов.
-    """
-
-    @classmethod
-    def __verify_data(cls, other):
-        if not isinstance(other, cls):
-            raise TypeError(f"'{type(cls)}' can't be compared with '{type(other)}'!")
-
-    def __eq__(self, other):
-        self.__verify_data(other)
-        return self.__id == other.__id
-
-    def __lt__(self, other):
-        self.__verify_data(other)
-        return self.__id < other.__id
-
-    def __le__(self, other):
-        self.__verify_data(other)
-        return self.__id <= other.__id
+        return different_employer

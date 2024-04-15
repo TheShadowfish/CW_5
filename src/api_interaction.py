@@ -1,6 +1,6 @@
 import requests
 from abc import ABC, abstractmethod
-from src.vacancy import Vacancy, Employeer
+from src.vacancy import Vacancy, Employer
 
 
 class AbstractApiNoAuth(ABC):
@@ -57,6 +57,7 @@ class HhApi(AbstractApiNoAuth, VacancyConstructor):
         # sub_url = 'vacancies'
 
         res = requests.get(self.__url, params=self.__parameters)
+        # input(f"Seee/// {self.__parameters}")
         if res.status_code != 200:
             raise Exception(f"Request code= {res.status_code}, request='{self.__url}', params={self.__parameters}")
 
@@ -224,6 +225,8 @@ class HhApi(AbstractApiNoAuth, VacancyConstructor):
 
             region = elem['area']['name']
 
+            region_id = elem['area']['id']
+
             requirements = ''
             if elem['professional_roles']:
                 requirements = f"Специальность: {', '.join([role['name'] for role in elem['professional_roles']])}. "
@@ -232,14 +235,18 @@ class HhApi(AbstractApiNoAuth, VacancyConstructor):
                 s = s.replace('<highlighttext>', '').replace('</highlighttext>', '')
                 requirements += s
 
-            employeer_id = elem['employer']['id']
+            employer_id = elem['employer']['id']
+            vacancy_id = elem['id']
 
-            v = Vacancy(name, url, salary, region, requirements, employeer_id)
+            # input(f"SEE {employer_id}, type= {type(employer_id)}")
+
+            v = Vacancy(name, url, salary, region, requirements, employer_id, region_id, vacancy_id)
             vacancy_list.append(v)
 
         return vacancy_list
 
-    def return_employer_list_from_json(vacancy_json: list[dict]) -> list[Employeer]:
+    @staticmethod
+    def return_employer_list_from_json(vacancy_json: list[dict]) -> list[Employer]:
 
         """
         Парсит полученный JSON - файл и возвращает список (list) объектов Vacancy
@@ -268,28 +275,16 @@ class HhApi(AbstractApiNoAuth, VacancyConstructor):
 
         """
         emplorer_list = []
-
-        for i, elem in enumerate(vacancy_json, start =1):
-            # print("start_elem\n")
-            # print(f"Employeer {i}) {elem['employer']}")
-            # input("\nend_elem")
+        for i, elem in enumerate(vacancy_json, start=1):
 
             employeer_id = elem['employer']['id']
             name = elem['employer']['name']
             url = elem['employer']['alternate_url']
-            vacancies_url = elem['employer']['vacancies_url']
+            # vacancies_url = elem['employer']['vacancies_url']
+            vacancies_url = ('https://spb.hh.ru/search/vacancy?from=employerPage&employer_id=' +
+                             employeer_id + '&hhtmFrom=employer')
 
-            # salary': {'from': 100000, 'to': 150000, 'currency': 'RUR', 'gross': False},
-
-            requirements = ''
-            if elem['professional_roles']:
-                requirements = f"Специальность: {', '.join([role['name'] for role in elem['professional_roles']])}. "
-            if elem['snippet']:
-                s = str(elem['snippet']['requirement'])
-                s = s.replace('<highlighttext>', '').replace('</highlighttext>', '')
-                requirements += s
-
-            v = Employeer(employeer_id, name, url, vacancies_url)
+            v = Employer(employeer_id, name, url, vacancies_url)
             emplorer_list.append(v)
 
         return emplorer_list
@@ -330,3 +325,23 @@ class HhApi(AbstractApiNoAuth, VacancyConstructor):
             parameters['only_with_salary'] = True
 
         return parameters
+
+    @staticmethod
+    def employer_get_vacancies(employer_id, only_with_salary=True):
+        """
+        Возврат вакансий по ID работодателя (employer_id), ограничение запроса - зарплата указана в вакансии,
+        не более 100 вакансий от работодателя.
+        """
+        params_id = {'employer_id': employer_id, 'per_page': 100, 'only_with_salary': only_with_salary}
+
+        url_vacancies = 'https://api.hh.ru/vacancies'
+        res = requests.get(url_vacancies, params=params_id)
+
+        if res.status_code != 200:
+            raise Exception(f"Request code= {res.status_code}, request='{url_vacancies}', params={params_id}")
+
+        # return res.json()['items']
+        print(
+            f"Вакансий найдено: {res.json()['found']}, pages: {res.json()['pages']}, per_page {res.json()['per_page']}")
+
+        return HhApi.return_vacancy_list_from_json(res.json()['items'])
