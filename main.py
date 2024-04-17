@@ -37,7 +37,6 @@ def user_interaction():
     print("        Р А Б О Т О Д А Т Е Л И        ")
     [print(f"{i}) {v}") for i, v in enumerate(employees_list, start=1)]
 
-
     vacancy_list = info_big_dict['vacancy']
     employees_list = info_big_dict['employees']
 
@@ -107,48 +106,34 @@ def get_vacancy_data(file_connector, rewrite):
                        "Сделать запрос с HH.ru по вакансиям + работодатели + выбрать параметры поиска"
                        "(Запрос с HH.ru по вакансиям, доп. запросы по работодателям, удаление дубликатов,"
                        " запись в базу данных.) (2) \n")
-                       # "Загрузить вакансии из файла (3) \n")
-                       # "Загрузить из файла и отфильтровать (4) \n")
+    # "Загрузить вакансии из файла (3) \n")
+    # "Загрузить из файла и отфильтровать (4) \n")
 
     if what_to_do == '2':
         vacancy_employers = get_request_info_universal(user_input(False), api_type='HeadHunter')
     else:
         vacancy_employers = get_request_info_universal(user_input(True), api_type='HeadHunter')
-    # else:
-    #     exit(0)
+        # else:
+        #     exit(0)
 
-        vacancy_list = vacancy_employers[0]
-        employees_list = vacancy_employers[1]
-        employees_list = Employer.remove_duplicates(employees_list)
+    vacancy_list = vacancy_employers[0]
+    employees_list = vacancy_employers[1]
+    employees_list = Employer.remove_duplicates(employees_list)
 
-        all_employer_vacancy_list = []
+    all_employer_vacancy_list = []
 
-        len_employers_list = len(employees_list)
+    len_employers_list = len(employees_list)
 
-        for i, e in enumerate(employees_list, start=1):
-            print(f"Работодатель {i} из {len_employers_list} ({i * 100 // len_employers_list}%)")
-            e_info = HhApi.employer_get_vacancies(e.id, only_with_salary=True)
-            all_employer_vacancy_list.extend(e_info)
+    for i, e in enumerate(employees_list, start=1):
+        print(f"Работодатель {i} из {len_employers_list} ({i * 100 // len_employers_list}%)")
+        e_info = HhApi.employer_get_vacancies(e.id, only_with_salary=True)
+        all_employer_vacancy_list.extend(e_info)
 
-        vacancy_list.extend(all_employer_vacancy_list)
-        vacancy_list = Vacancy.remove_duplicates(vacancy_list)
+    vacancy_list.extend(all_employer_vacancy_list)
+    vacancy_list = Vacancy.remove_duplicates(vacancy_list)
 
-        save_to_file(vacancy_list, employees_list, file_connector, rewrite)
+    save_to_file(vacancy_list, employees_list, file_connector, rewrite)
 
-    # elif what_to_do == '2':
-    #     vacancy_employers = get_request_info_universal(user_input(False), api_type='HeadHunter')
-    #     vacancy_list = vacancy_employers[0]
-    #     employees_list = vacancy_employers[1]
-    #
-    # elif what_to_do == '3':
-    #     vacancy_list = open_file(file_connector)
-    #     employees_list = open_file_employers(file_connector)
-    # elif what_to_do == '4':
-    #     vacancy_list = open_file(file_connector)
-    #     employees_list = open_file_employers(file_connector)
-    #     vacancy_list = Vacancy.apply_filters(vacancy_list, user_input(False))
-    # else:
-    #     exit(0)
     print("        В А К А Н С И И       ")
     [print(f"{i}) {v}") for i, v in enumerate(vacancy_list, start=1)]
 
@@ -199,7 +184,7 @@ def work_with_vacancy_class(vacancy_list: list[Vacancy], employees_list: list[Em
             if e_list:
                 e_print = [employer for number, employer in enumerate(employees_list, start=1) if number in e_list]
                 print("Информация по вакансиям: ")
-                e_info = []
+                # e_info = []
 
                 chosen_employer_vacancy_list = []
                 for e in e_print:
