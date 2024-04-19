@@ -423,7 +423,8 @@ class DBManager(AbsoluteFileConnector, LoadWrite, DBManagerNeedToPerform):
         # Ладно, по названию вакансии сгруппирую.
         # Добавил подсчет количества одноименных вакансий, а то непонятно, как эти данные оценивать
         request_name = self.get_avg_salary.__doc__
-        request = "SELECT vacancies.name, CAST(AVG(vacancies.salary) AS int), COUNT(vacancies.name) AS number_of_vacancies \
+        request = "SELECT vacancies.name, CONCAT(CAST(AVG(vacancies.salary) AS int), ' рублей'), \
+                CONCAT(COUNT(vacancies.name), ' шт.') AS number_of_vacancies \
                 FROM vacancies GROUP BY vacancies.name \
                 ORDER BY AVG(vacancies.salary) DESC;"
 
