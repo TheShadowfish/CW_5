@@ -18,6 +18,18 @@ SELECT vacancies.name AS vacancy, employers.name AS employer, salary, vacancies.
 SELECT vacancies.name, AVG(vacancies.salary), COUNT(vacancies.name) AS number_of_vacancies FROM vacancies GROUP BY vacancies.name
 	ORDER BY AVG(vacancies.salary) DESC;
 
+--cast  CAST(AVG(vacancies.salary) AS int)
+SELECT vacancies.name, CAST(AVG(vacancies.salary) AS int) AS AVG_salary, COUNT(vacancies.name) AS number_of_vacancies FROM vacancies GROUP BY vacancies.name
+	ORDER BY AVG(vacancies.salary) DESC;
+
+--to_char(125.8::real, '999D9') → 125.8
+SELECT vacancies.name, to_char(AVG(vacancies.salary), '999999999 рублей') AS AVG_salary, COUNT(vacancies.name) AS number_of_vacancies FROM vacancies GROUP BY vacancies.name
+	ORDER BY AVG(vacancies.salary) DESC;
+
+--cast  CAST(AVG(vacancies.salary) AS int)
+SELECT vacancies.name, CAST(AVG(vacancies.salary) AS int) AS AVG_salary, COUNT(vacancies.name) AS number_of_vacancies FROM vacancies GROUP BY vacancies.name
+	ORDER BY AVG(vacancies.salary) DESC;
+
 --Получает список всех вакансий, у которых зарплата выше средней по всем вакансиям
 
 SELECT * FROM vacancies,
